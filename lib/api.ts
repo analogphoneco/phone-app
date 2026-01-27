@@ -2,10 +2,21 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 
 // Minimal helper to pick a reachable backend base URL depending on environment.
-// - If expo `extra.api` is provided, that is used (recommended for devices).
-// - On Android emulator, use 10.0.2.2 which routes to host machine.
-// - Otherwise default to localhost (iOS simulator / web when running locally).
+// - iOS simulator: always use 127.0.0.1 (most reliable)
+// - Android emulator: use 10.0.2.2 which routes to host machine
+// - Physical devices / other: use expo `extra.api` if provided, else localhost
 export function getApiBase(port = 4000) {
+  // iOS simulator: always use 127.0.0.1 directly (extra.api is for physical devices)
+  if (Platform.OS === "ios" && !Constants.isDevice) {
+    return `http://127.0.0.1:${port}`;
+  }
+
+  // Android emulator: use special IP that maps to host localhost
+  if (Platform.OS === "android" && !Constants.isDevice) {
+    return `http://10.0.2.2:${port}`;
+  }
+
+  // Physical devices: use extra.api if configured
   const expoExtra = (Constants?.manifest?.extra ?? Constants?.expoConfig?.extra) as
     | Record<string, any>
     | undefined;
@@ -14,11 +25,6 @@ export function getApiBase(port = 4000) {
     return expoExtra.api;
   }
 
-  if (Platform.OS === "android") {
-    // Android emulator (default Android Studio emulator) maps host localhost -> 10.0.2.2
-    return `http://10.0.2.2:${port}`;
-  }
-
-  // iOS simulator: use 127.0.0.1 instead of localhost for more reliable connectivity
-  return `http://127.0.0.1:${port}`;
+  // Fallback
+  return `http://localhost:${port}`;
 }
