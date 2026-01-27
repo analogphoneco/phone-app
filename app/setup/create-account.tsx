@@ -19,11 +19,16 @@ export default function CreateAccount() {
     if (!userName || !password) return Alert.alert("Please enter user name and password");
     setLoading(true);
     try {
+      // Guard network requests with a timeout to avoid the spinner hanging forever
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
       const res = await fetch(`${getApiBase()}/api/devices/${encodeURIComponent(customerId)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_name: userName, password }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || JSON.stringify(data));
 
@@ -46,7 +51,11 @@ export default function CreateAccount() {
         Alert.alert("Account created", "Your account was created. Next: pick a phone number.");
       }
     } catch (e: any) {
-      Alert.alert("Error", e?.message || String(e));
+      if (e?.name === 'AbortError') {
+        Alert.alert("Network timeout", "The request timed out. Is the backend running and reachable from the simulator/device?");
+      } else {
+        Alert.alert("Error", e?.message || String(e));
+      }
     } finally {
       setLoading(false);
     }
