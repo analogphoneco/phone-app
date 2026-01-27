@@ -19,6 +19,23 @@ export default function CreateAccount() {
     if (!userName || !password) return Alert.alert("Please enter user name and password");
     setLoading(true);
     try {
+      // quick preflight: ensure backend is reachable before attempting create
+      try {
+        const hc = new AbortController();
+        const ht = setTimeout(() => hc.abort(), 3000);
+        const hres = await fetch(`${getApiBase()}/api/health`, { signal: hc.signal });
+        clearTimeout(ht);
+        if (!hres.ok) {
+          Alert.alert("Backend unreachable", `Health check failed: ${hres.status}`);
+          setLoading(false);
+          return;
+        }
+      } catch (he) {
+        Alert.alert("Backend unreachable", "Cannot reach backend at the configured API base. Make sure it's running and reachable from the simulator/device.");
+        setLoading(false);
+        return;
+      }
+
       // Guard network requests with a timeout to avoid the spinner hanging forever
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
