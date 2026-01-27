@@ -19,6 +19,6 @@ export function getApiBase(port = 4000) {
     return `http://10.0.2.2:${port}`;
   }
 
-  // iOS simulator and web usually can reach localhost
-  return `http://localhost:${port}`;
+  // iOS simulator: use 127.0.0.1 instead of localhost for more reliable connectivity
+  return `http://127.0.0.1:${port}`;
 }
