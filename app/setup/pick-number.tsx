@@ -48,14 +48,17 @@ export default function PickNumber() {
         body: JSON.stringify({ phone_number: number, customerId }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || JSON.stringify(data));
+      if (!res.ok || data?.ok === false) {
+        const errMsg =
+          data?.error?.detail || data?.error?.message || (typeof data?.error === "string" ? data.error : JSON.stringify(data?.error));
+        throw new Error(errMsg || `Purchase failed (${res.status})`);
+      }
       Alert.alert("Success", `Number ${number} purchased/claimed.`);
-      // navigate to provisioning step so user can finish setup
+      // navigate to provisioning step so user can finish setup and show customerId
       try {
-        const router = useRouter();
-        router.push("/setup/provision");
+        router.push(`/setup/provision?customerId=${encodeURIComponent(customerId)}`);
       } catch (e) {
-        // ignore
+        // ignore navigation failures
       }
     } catch (e: any) {
       Alert.alert("Error", e?.message || String(e));
@@ -83,7 +86,11 @@ export default function PickNumber() {
           renderItem={({ item }) => (
             <View style={{ padding: 12, borderWidth: 1, borderRadius: 8, marginBottom: 8 }}>
               <Text style={{ fontSize: 16 }}>{item?.phone_number || item?.phone_number_e164 || JSON.stringify(item)}</Text>
-              <Button title="Purchase" onPress={() => handlePurchase(item?.phone_number || item?.phone_number_e164)} />
+              <Button
+                title={loading ? "Working..." : "Purchase"}
+                onPress={() => handlePurchase(item?.phone_number || item?.phone_number_e164)}
+                disabled={loading}
+              />
             </View>
           )}
         />
