@@ -2,15 +2,19 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Button, Alert, Linking } from "react-native";
 import { getApiBase } from "../../lib/api";
 import { getCredentials } from "../../lib/storage";
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 export default function Provision() {
   const [customerId, setCustomerId] = useState<string | null>(null);
+  const params = useLocalSearchParams();
 
   useEffect(() => {
     (async () => {
       const creds = await getCredentials();
-      setCustomerId(creds?.customerId ?? null);
+      // allow override from query params (e.g. when navigated from pick-number)
+      const paramCustomer = String(params?.customerId || "") || null;
+      const resolved = creds?.customerId ?? paramCustomer;
+      setCustomerId(resolved ?? null);
     })();
   }, []);
 
