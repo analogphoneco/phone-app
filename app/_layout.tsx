@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator } from 'react-native';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import {
   useFonts,
@@ -16,6 +17,7 @@ import { StripeProvider } from '@stripe/stripe-react-native';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { checkAndRefreshApiKey } from '@/lib/api';
 
 const STRIPE_PUBLISHABLE_KEY = 'pk_test_51SvSh4GlDwPdxwVUluBGsQF738c9x2PPufX1PLluhXUCbplr3Z94jXYsNW7Kz9pgeZLHfLALGj77VGDVFVHcVqt500sjvHFGwJ';
 
@@ -34,6 +36,13 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+
+  // Check and refresh API key on app start
+  useEffect(() => {
+    checkAndRefreshApiKey().catch(err => {
+      console.log("Failed to refresh API key on startup:", err);
+    });
+  }, []);
 
   if (!fontsLoaded) {
     return (

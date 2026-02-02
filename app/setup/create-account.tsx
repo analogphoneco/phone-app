@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { getApiBase } from "../../lib/api";
-import { saveCredentials, saveCustomerId } from "../../lib/storage";
+import { saveCredentials, saveCustomerId, saveApiKey } from "../../lib/storage";
 import { useRouter, Link } from "expo-router";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
@@ -88,6 +88,11 @@ export default function CreateAccount() {
       // Save credentials locally
       await saveCredentials({ customerId, userName: trimmedName });
       await saveCustomerId(customerId);
+      
+      // Save API key if returned
+      if (data.customer?.apiKey) {
+        await saveApiKey(data.customer.apiKey);
+      }
 
       // Check if this is a returning user with an existing subscription
       if (data.existing) {
