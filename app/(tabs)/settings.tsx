@@ -21,15 +21,6 @@ interface UsageStats {
   hourlyCallsRemaining: number;
 }
 
-interface PhoneLine {
-  id: string;
-  phoneNumber: string;
-  status: string;
-  purchaseDate: string;
-  telnyxConnectionId?: string;
-  telnyxPhoneNumberId?: string;
-}
-
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
   const { colors, typography, styles } = useAppStyles(colorScheme);
@@ -42,8 +33,6 @@ export default function SettingsScreen() {
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [usageLoading, setUsageLoading] = useState(false);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
-  const [phoneLines, setPhoneLines] = useState<PhoneLine[]>([]);
-  const [phoneLinesLoading, setPhoneLinesLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -105,35 +94,12 @@ export default function SettingsScreen() {
     }
   }, [usageExpanded, usageStats, loadUsageStats]);
 
-  // Load phone lines
-  const loadPhoneLines = useCallback(async () => {
-    if (!customerId) return;
-    setPhoneLinesLoading(true);
-    try {
-      const creds = await getCredentials();
-      const res = await fetch(`${getApiBase()}/api/phone-lines/${encodeURIComponent(customerId)}`, {
-        headers: {
-          "X-API-Key": creds?.apiKey || "",
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setPhoneLines(data.phoneLines || []);
-      }
-    } catch (e) {
-      console.log("[Settings] Error loading phone lines:", e);
-    } finally {
-      setPhoneLinesLoading(false);
-    }
-  }, [customerId]);
-
   // Load data on mount and when tab is focused
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
       loadData();
-      loadPhoneLines();
-    }, [loadData, loadPhoneLines])
+    }, [loadData])
   );
 
   async function handleSignOut() {
@@ -237,86 +203,6 @@ export default function SettingsScreen() {
         )}
       </View>
 
-      {/* Phone Number Management Section */}
-      {customerId && (
-        <View style={styles.section}>
-          <View style={styles.sectionTitleContainer}>
-            <Text style={typography.sectionHeader}>Phone Numbers</Text>
-          </View>
-          {phoneLinesLoading ? (
-            <View style={styles.card}>
-              <ActivityIndicator size="small" color={colors.tint} />
-              <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginTop: 8 }]}>
-                Loading...
-              </Text>
-            </View>
-          ) : phoneLines.length > 0 ? (
-            <View style={styles.card}>
-              {phoneLines.map((line, index) => (
-                <React.Fragment key={line.id}>
-                  {index > 0 && <View style={styles.divider} />}
-                  <View style={{ paddingVertical: 8 }}>
-                    <View style={styles.row}>
-                      <IconSymbol name="phone.fill" size={20} color={colors.icon} />
-                      <Text style={[typography.callout, { marginLeft: 12, flex: 1 }]}>
-                        {line.phoneNumber}
-                      </Text>
-                      <View
-                        style={{
-                          backgroundColor: line.status === "active" ? "#34C759" : colors.icon,
-                          paddingHorizontal: 8,
-                          paddingVertical: 4,
-                          borderRadius: 8,
-                        }}
-                      >
-                        <Text style={[typography.footnote, { color: "#FFFFFF", fontWeight: "600" }]}>
-                          {line.status.toUpperCase()}
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={{ marginTop: 8, marginLeft: 32 }}>
-                      <Text style={[typography.footnote, { color: colors.icon }]}>
-                        Purchased: {new Date(line.purchaseDate).toLocaleDateString()}
-                      </Text>
-                      <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
-                        Monthly cost: $1.50/month
-                      </Text>
-                      {line.telnyxConnectionId && (
-                        <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
-                          Connection: {line.telnyxConnectionId.slice(0, 16)}...
-                        </Text>
-                      )}
-                    </View>
-                    <Pressable
-                      style={[styles.buttonSecondary, { marginTop: 12 }]}
-                      onPress={() => {
-                        Alert.alert(
-                          "Phone Number Details",
-                          `Number: ${line.phoneNumber}\nStatus: ${line.status}\nPurchased: ${new Date(
-                            line.purchaseDate
-                          ).toLocaleDateString()}\n\nFull management features coming soon.`
-                        );
-                      }}
-                    >
-                      <Text style={[typography.subheadMedium, { color: colors.tint }]}>View Details</Text>
-                    </Pressable>
-                  </View>
-                </React.Fragment>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.card}>
-              <Text style={[typography.callout, { color: colors.icon, textAlign: "center" }]}>
-                No phone numbers found
-              </Text>
-              <Text style={[typography.footnote, { color: colors.icon, textAlign: "center", marginTop: 8 }]}>
-                Complete setup to purchase a phone number
-              </Text>
-            </View>
-          )}
-        </View>
-      )}
-
       {/* Device Setup Section */}
       {customerId && (
         <View style={styles.section}>
@@ -362,12 +248,12 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* Usage Section - collapsible, subtle */}
+      {/* Usage & Billing Section - collapsible, subtle */}
       {subscriptionId && (
         <View style={styles.section}>
           <Pressable onPress={toggleUsage}>
             <View style={[styles.row, { paddingVertical: 4 }]}>
-              <Text style={[typography.sectionHeader, { flex: 1 }]}>Usage</Text>
+              <Text style={[typography.sectionHeader, { flex: 1 }]}>Usage & Billing</Text>
               <IconSymbol 
                 name={usageExpanded ? "chevron.up" : "chevron.down"} 
                 size={16} 
@@ -425,8 +311,29 @@ export default function SettingsScreen() {
                     }} />
                   </View>
                   
+                  <View style={styles.divider} />
+                  
+                  <View style={[styles.row, { marginTop: 12 }]}>
+                    <Text style={[typography.footnote, { flex: 1, color: colors.icon }]}>Subscription</Text>
+                    <Text style={[typography.footnote, { color: colors.icon }]}>
+                      $4.99/month
+                    </Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={[typography.footnote, { flex: 1, color: colors.icon }]}>Phone Number</Text>
+                    <Text style={[typography.footnote, { color: colors.icon }]}>
+                      $1.50/month
+                    </Text>
+                  </View>
+                  <View style={[styles.row, { marginTop: 4 }]}>
+                    <Text style={[typography.callout, { flex: 1, fontWeight: '600' }]}>Total</Text>
+                    <Text style={[typography.callout, { fontWeight: '600' }]}>
+                      $6.49/month
+                    </Text>
+                  </View>
+                  
                   <Text style={[typography.caption, { color: colors.icon, marginTop: 12, textAlign: 'center' }]}>
-                    Resets at the start of each billing period
+                    Usage resets at the start of each billing period
                   </Text>
                 </>
               ) : (
