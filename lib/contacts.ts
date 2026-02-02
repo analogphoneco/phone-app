@@ -6,17 +6,30 @@ import * as Contacts from 'expo-contacts';
 
 let contactsCache: Map<string, string> | null = null;
 let contactsPermissionGranted = false;
+let contactsAvailable = true;
+
+// Check if contacts module is available
+try {
+  if (!Contacts) {
+    contactsAvailable = false;
+  }
+} catch (error) {
+  contactsAvailable = false;
+}
 
 /**
  * Request permission to access contacts
  */
 export async function requestContactsPermission(): Promise<boolean> {
+  if (!contactsAvailable) return false;
+  
   try {
     const { status } = await Contacts.requestPermissionsAsync();
     contactsPermissionGranted = status === 'granted';
     return contactsPermissionGranted;
   } catch (error) {
     console.error('[Contacts] Permission request failed:', error);
+    contactsAvailable = false;
     return false;
   }
 }
@@ -25,12 +38,15 @@ export async function requestContactsPermission(): Promise<boolean> {
  * Check if we have contacts permission
  */
 export async function hasContactsPermission(): Promise<boolean> {
+  if (!contactsAvailable) return false;
+  
   try {
     const { status } = await Contacts.getPermissionsAsync();
     contactsPermissionGranted = status === 'granted';
     return contactsPermissionGranted;
   } catch (error) {
     console.error('[Contacts] Permission check failed:', error);
+    contactsAvailable = false;
     return false;
   }
 }
@@ -39,6 +55,8 @@ export async function hasContactsPermission(): Promise<boolean> {
  * Load all contacts and build a phone number -> name cache
  */
 export async function loadContactsCache(): Promise<void> {
+  if (!contactsAvailable) return;
+  
   if (!contactsPermissionGranted) {
     const granted = await requestContactsPermission();
     if (!granted) {
@@ -76,6 +94,7 @@ export async function loadContactsCache(): Promise<void> {
     console.log(`[Contacts] Loaded ${cache.size} phone numbers from ${data.length} contacts`);
   } catch (error) {
     console.error('[Contacts] Failed to load contacts:', error);
+    contactsAvailable = false;
   }
 }
 
