@@ -43,7 +43,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="phone.fill" color={color} />
+            <IconSymbol size={26} name="house.fill" color={color} />
           ),
         }}
       />
@@ -53,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: 'Calls',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={26} name="phone.arrow.up.right.fill" color={color} />
+            <IconSymbol size={26} name="phone.badge.waveform.fill" color={color} />
           ),
         }}
       />

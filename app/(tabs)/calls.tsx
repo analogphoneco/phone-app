@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,12 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { getCustomerId } from "@/lib/storage";
 import { getApiBase } from "@/lib/api";
+import { 
+  loadContactsCache, 
+  getContactName, 
+  hasContactsPermission,
+  requestContactsPermission,
+} from "@/lib/contacts";
 
 interface CallRecord {
   id: string;
@@ -76,6 +82,25 @@ export default function CallsScreen() {
   const [calls, setCalls] = useState<CallRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [contactsLoaded, setContactsLoaded] = useState(false);
+
+  // Load contacts on mount
+  useEffect(() => {
+    (async () => {
+      const hasPermission = await hasContactsPermission();
+      if (hasPermission) {
+        await loadContactsCache();
+        setContactsLoaded(true);
+      } else {
+        // Try to request permission
+        const granted = await requestContactsPermission();
+        if (granted) {
+          await loadContactsCache();
+          setContactsLoaded(true);
+        }
+      }
+    })();
+  }, []);
 
   const loadCalls = useCallback(async (showRefresh = false) => {
     try {
@@ -152,7 +177,7 @@ export default function CallsScreen() {
       <View style={styles.screen}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Text style={typography.largeTitle}>Calls</Text>
-          <View style={[styles.emptyState, { marginTop: 60 }]}>
+          <View style={{ justifyContent: "center", alignItems: "center", marginTop: 60 }}>
             <IconSymbol name="phone.fill" size={64} color={colors.icon} />
             <Text style={[typography.title2, { marginTop: 16, textAlign: "center" }]}>
               No Account
@@ -181,7 +206,7 @@ export default function CallsScreen() {
       <Text style={typography.largeTitle}>Calls</Text>
 
       {calls.length === 0 ? (
-        <View style={[styles.emptyState, { marginTop: 60 }]}>
+        <View style={{ justifyContent: "center", alignItems: "center", marginTop: 60 }}>
           <IconSymbol name="phone.fill" size={64} color={colors.icon} />
           <Text style={[typography.title2, { marginTop: 16, textAlign: "center" }]}>
             No Call History
@@ -197,13 +222,18 @@ export default function CallsScreen() {
             const displayNumber = isInbound ? call.from_number : call.to_number;
             const callColor = getCallColor(call);
             const statusLabel = getStatusLabel(call);
+            
+            // Get contact name if available
+            const contactName = getContactName(displayNumber);
+            const displayName = contactName || formatPhoneNumber(displayNumber);
 
             return (
               <View key={call.id}>
                 {idx > 0 && <View style={styles.divider} />}
                 <Pressable
                   style={({ pressed }) => [
-                    styles.listItem,
+                    styles.row,
+                    { paddingVertical: 12 },
                     pressed && { backgroundColor: colors.icon + "10" },
                   ]}
                 >
@@ -215,9 +245,14 @@ export default function CallsScreen() {
                       style={{ marginRight: 12 }}
                     />
                     <View style={{ flex: 1 }}>
-                      <Text style={[typography.headline, { color: callColor }]}>
-                        {formatPhoneNumber(displayNumber)}
+                      <Text style={[typography.subheadMedium, { color: callColor }]}>
+                        {displayName}
                       </Text>
+                      {contactName && (
+                        <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
+                          {formatPhoneNumber(displayNumber)}
+                        </Text>
+                      )}
                       <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
                         <Text style={[typography.footnote, { color: colors.icon }]}>
                           {isInbound ? "Incoming" : "Outgoing"}
