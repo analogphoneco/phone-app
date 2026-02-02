@@ -1,18 +1,28 @@
 {
   "expo": {
-    "name": "phone-app",
-    "slug": "phone-app",
+    "name": "Analog Phone",
+    "slug": "analog-phone",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "phoneapp",
+    "scheme": "analogphone",
     "userInterfaceStyle": "automatic",
     "extra": {
-      "api": "http://192.168.50.186:4000"
+      "api": "https://analog-phone-backend-production.up.railway.app",
+      "router": {},
+      "eas": {
+        "projectId": "942b8702-45bc-40db-94cc-9c67f608278c"
+      }
     },
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "co.analogphone.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to scan QR codes for device setup",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -22,7 +32,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "co.analogphone.app"
     },
     "web": {
       "output": "static",
@@ -34,16 +45,24 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 280,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#E8E1D6",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#1F1D1B"
           }
         }
       ],
       "expo-web-browser",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font",
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.analogphone",
+          "enableGooglePay": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

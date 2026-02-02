@@ -1,6 +1,6 @@
-# Welcome to your Expo app 👋
+# Analog Phone
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+The Analog Phone iOS/Android app - a VoIP phone service that lets you make calls using a real landline phone.
 
 ## Get started
 

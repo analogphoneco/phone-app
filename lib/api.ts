@@ -25,6 +25,11 @@ export function getApiBase(port = 4000) {
     return expoExtra.api;
   }
 
-  // Fallback
+  // Fallback to production backend for physical devices
+  if (Constants.isDevice) {
+    return "https://analog-phone-backend-production.up.railway.app";
+  }
+
+  // Last resort fallback
   return `http://localhost:${port}`;
 }

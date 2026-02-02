@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -8,11 +9,32 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const colors = Colors[colorScheme ?? 'light'];
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: colors.tint,
+        tabBarInactiveTintColor: colors.icon,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.icon + '25',
+          borderTopWidth: 1,
+          paddingTop: 8,
+          height: Platform.OS === 'ios' ? 88 : 64,
+          // Subtle vintage shadow
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          elevation: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+          letterSpacing: 0.3,
+          marginTop: 4,
+        },
         headerShown: false,
         tabBarButton: HapticTab,
       }}>
@@ -21,19 +43,37 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <IconSymbol size={26} name="phone.fill" color={color} />
           ),
         }}
       />
 
-      {/* Dialpad tab removed */}
+      <Tabs.Screen
+        name="voicemail"
+        options={{
+          title: 'Voicemail',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={26} name="recordingtape" color={color} />
+          ),
+        }}
+      />
 
       <Tabs.Screen
-        name="explore"
+        name="subscription"
         options={{
-          title: 'Explore',
+          title: 'Plan',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
+            <IconSymbol size={26} name="dollarsign.circle.fill" color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={26} name="slider.horizontal.3" color={color} />
           ),
         }}
       />
