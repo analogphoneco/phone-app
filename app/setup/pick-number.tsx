@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, TextInput } from "react-native";
 import { getApiBase } from "../../lib/api";
 import { getCredentials } from "../../lib/storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+
+// Format phone number to (555) 123-4567
+function formatPhoneNumber(phoneNumber: string): string {
+  const cleaned = phoneNumber.replace(/\D/g, '');
+  if (cleaned.length === 11 && cleaned.startsWith('1')) {
+    const areaCode = cleaned.slice(1, 4);
+    const prefix = cleaned.slice(4, 7);
+    const line = cleaned.slice(7);
+    return `(${areaCode}) ${prefix}-${line}`;
+  }
+  return phoneNumber;
+}
 
 export default function PickNumber() {
   const colorScheme = useColorScheme();
@@ -15,6 +27,7 @@ export default function PickNumber() {
   const [loading, setLoading] = useState(false);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [customerId, setCustomerId] = useState<string | null>(null);
+  const [areaCode, setAreaCode] = useState("");
   const router = useRouter();
   const params = useLocalSearchParams();
   const justSubscribed = String(params?.subscribed) === "1";
@@ -30,10 +43,15 @@ export default function PickNumber() {
     })();
   }, []);
 
-  async function fetchNumbers() {
+  async function fetchNumbers(searchAreaCode?: string) {
     setLoading(true);
     try {
-      const res = await fetch(`${getApiBase()}/api/telnyx/numbers?country=US&limit=20`);
+      // Only fetch local numbers (no toll-free)
+      let url = `${getApiBase()}/api/telnyx/numbers?country=US&limit=20&type=local`;
+      if (searchAreaCode && searchAreaCode.length === 3) {
+        url += `&area_code=${searchAreaCode}`;
+      }
+      const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || JSON.stringify(data));
       setNumbers(Array.isArray(data.results) ? data.results : []);
@@ -41,6 +59,16 @@ export default function PickNumber() {
       Alert.alert("Error", e?.message || String(e));
     } finally {
       setLoading(false);
+    }
+  }
+
+  function handleAreaCodeSearch() {
+    if (areaCode.length === 3) {
+      fetchNumbers(areaCode);
+    } else if (areaCode.length === 0) {
+      fetchNumbers();
+    } else {
+      Alert.alert("Invalid Area Code", "Please enter a 3-digit area code");
     }
   }
 
@@ -102,8 +130,38 @@ export default function PickNumber() {
       <View style={[styles.center, { padding: 24, paddingTop: 16, gap: 8 }]}>
         <IconSymbol name="phone.badge.plus" size={32} color={colors.tint} />
         <Text style={[typography.title2, { marginTop: 8 }]}>Choose your number</Text>
-        <Text style={[typography.callout, { color: colors.icon }]}>Select a phone number from the list below</Text>
+        <Text style={[typography.callout, { color: colors.icon }]}>Local phone number included in your plan</Text>
       </View>
+
+      {customerId && (
+        <View style={{ padding: 16, paddingTop: 0, gap: 12 }}>
+          <View style={[styles.row, { gap: 8 }]}>
+            <View style={{ flex: 1 }}>
+              <TextInput
+                style={[styles.input, typography.body]}
+                placeholder="Area code (e.g. 212)"
+                placeholderTextColor={colors.icon}
+                value={areaCode}
+                onChangeText={setAreaCode}
+                keyboardType="number-pad"
+                maxLength={3}
+              />
+            </View>
+            <Pressable 
+              style={[styles.buttonPrimary, { paddingHorizontal: 20 }]} 
+              onPress={handleAreaCodeSearch}
+              disabled={loading}
+            >
+              <Text style={typography.buttonText}>Search</Text>
+            </Pressable>
+          </View>
+          {areaCode.length > 0 && (
+            <Pressable onPress={() => { setAreaCode(""); fetchNumbers(); }}>
+              <Text style={[typography.footnote, { color: colors.tint }]}>Clear search</Text>
+            </Pressable>
+          )}
+        </View>
+      )}
 
       {!customerId ? (
         <View style={[styles.center, { flex: 1, gap: 16, padding: 24 }]}>
@@ -112,7 +170,9 @@ export default function PickNumber() {
       ) : loading ? (
         <View style={[styles.center, { flex: 1, gap: 16 }]}>
           <ActivityIndicator size="large" color={colors.tint} />
-          <Text style={[typography.callout, { color: colors.icon }]}>Loading available numbers...</Text>
+          <Text style={[typography.callout, { color: colors.icon }]}>
+            {areaCode ? `Searching area code ${areaCode}...` : "Loading available numbers..."}
+          </Text>
         </View>
       ) : numbers.length > 0 ? (
         <FlatList
@@ -121,6 +181,7 @@ export default function PickNumber() {
           contentContainerStyle={{ padding: 16, gap: 12 }}
           renderItem={({ item }) => {
             const phoneNumber = item?.phone_number || item?.phone_number_e164;
+            const formattedNumber = formatPhoneNumber(phoneNumber);
             const isPurchasing = purchasing === phoneNumber;
             return (
               <Pressable
@@ -129,9 +190,11 @@ export default function PickNumber() {
                 disabled={!!purchasing}
               >
                 <View style={{ flex: 1, gap: 4 }}>
-                  <Text style={typography.bodyMedium}>{phoneNumber}</Text>
+                  <Text style={typography.bodyMedium}>{formattedNumber}</Text>
                   {item?.locality && (
-                    <Text style={typography.footnote}>{item.locality}, {item.administrative_area}</Text>
+                    <Text style={[typography.footnote, { color: colors.icon }]}>
+                      {item.locality}, {item.administrative_area}
+                    </Text>
                   )}
                 </View>
                 {isPurchasing ? (
@@ -146,8 +209,10 @@ export default function PickNumber() {
       ) : (
         <View style={[styles.center, { flex: 1, gap: 16, padding: 24 }]}>
           <IconSymbol name="phone.down" size={40} color={colors.icon} />
-          <Text style={[typography.callout, { color: colors.icon, textAlign: "center" }]}>No numbers available right now</Text>
-          <Pressable style={styles.buttonPrimary} onPress={fetchNumbers}>
+          <Text style={[typography.callout, { color: colors.icon, textAlign: "center" }]}>
+            {areaCode ? `No numbers found in area code ${areaCode}` : "No numbers available right now"}
+          </Text>
+          <Pressable style={styles.buttonPrimary} onPress={() => fetchNumbers()}>
             <Text style={typography.buttonText}>Try Again</Text>
           </Pressable>
         </View>

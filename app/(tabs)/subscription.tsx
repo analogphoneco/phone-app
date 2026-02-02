@@ -15,6 +15,7 @@ import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { showError } from "@/lib/errors";
 import {
   listPlans,
   getActiveSubscription,
@@ -65,7 +66,8 @@ export default function SubscriptionScreen() {
       }
     } catch (error) {
       console.error("Failed to load subscription data:", error);
-      Alert.alert("Error", "Failed to load subscription information");
+      const err = showError(error);
+      Alert.alert(err.title, err.message, err.buttons);
     } finally {
       setLoading(false);
     }
@@ -128,7 +130,8 @@ export default function SubscriptionScreen() {
       setSubscription(updatedSub);
       Alert.alert("Success", "Your subscription is now active!");
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to process payment");
+      const err = showError(error);
+      Alert.alert(err.title, err.message, err.buttons);
     } finally {
       setActionLoading(false);
     }
@@ -155,7 +158,8 @@ export default function SubscriptionScreen() {
                 "Your subscription will end at the end of the current billing period."
               );
             } catch (error: any) {
-              Alert.alert("Error", error.message || "Failed to cancel subscription");
+              const err = showError(error);
+              Alert.alert(err.title, err.message, err.buttons);
             } finally {
               setActionLoading(false);
             }
@@ -174,7 +178,8 @@ export default function SubscriptionScreen() {
       setSubscription(updated);
       Alert.alert("Success", "Your subscription has been reactivated!");
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to reactivate subscription");
+      const err = showError(error);
+      Alert.alert(err.title, err.message, err.buttons);
     } finally {
       setActionLoading(false);
     }
@@ -190,7 +195,8 @@ export default function SubscriptionScreen() {
       const url = await getBillingPortalUrl(customerId, returnUrl);
       await Linking.openURL(url);
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to open billing portal");
+      const err = showError(error);
+      Alert.alert(err.title, err.message, err.buttons);
     } finally {
       setActionLoading(false);
     }
@@ -237,7 +243,8 @@ export default function SubscriptionScreen() {
       setSubscription(updatedSub);
       Alert.alert("Success", "Payment successful! Your subscription is now active.");
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to process payment");
+      const err = showError(error);
+      Alert.alert(err.title, err.message, err.buttons);
     } finally {
       setActionLoading(false);
     }

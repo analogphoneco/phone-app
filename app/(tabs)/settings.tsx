@@ -364,6 +364,25 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
       </View>
+
+      {/* Account Actions */}
+      {customerId && (
+        <View style={styles.section}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.buttonSecondary,
+              { borderColor: "#FF3B30", marginBottom: 12 },
+              pressed && { opacity: 0.7 },
+            ]}
+            onPress={handleSignOut}
+          >
+            <IconSymbol name="rectangle.portrait.and.arrow.right" size={20} color="#FF3B30" />
+            <Text style={[typography.buttonText, { color: "#FF3B30", marginLeft: 8 }]}>
+              Logout
+            </Text>
+          </Pressable>
+        </View>
+      )}
     </ScrollView>
   );
 }

@@ -16,6 +16,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { getCustomerId } from "@/lib/storage";
+import { showError } from "@/lib/errors";
 import {
   listVoicemails,
   markVoicemailAsListened,
@@ -74,7 +75,8 @@ export default function VoicemailScreen() {
             await deleteVoicemail(vm.id);
             setVoicemails((prev) => prev.filter((v) => v.id !== vm.id));
           } catch (e: unknown) {
-            Alert.alert("Error", (e as Error).message || "Failed to delete");
+            const error = showError(e);
+            Alert.alert(error.title, error.message, error.buttons);
           }
         },
       },
