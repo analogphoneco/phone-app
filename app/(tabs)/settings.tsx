@@ -21,6 +21,12 @@ interface UsageStats {
   hourlyCallsRemaining: number;
 }
 
+interface SubscriptionStatus {
+  status: string;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
+}
+
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
   const { colors, typography, styles } = useAppStyles(colorScheme);
@@ -33,6 +39,7 @@ export default function SettingsScreen() {
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [usageLoading, setUsageLoading] = useState(false);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -54,8 +61,18 @@ export default function SettingsScreen() {
         try {
           const sub = await getActiveSubscription(creds.customerId);
           setSubscriptionId(sub?.id || null);
+          if (sub) {
+            setSubscriptionStatus({
+              status: sub.status || 'unknown',
+              currentPeriodEnd: sub.current_period_end || undefined,
+              cancelAtPeriodEnd: sub.cancel_at_period_end || false,
+            });
+          } else {
+            setSubscriptionStatus(null);
+          }
         } catch {
           setSubscriptionId(null);
+          setSubscriptionStatus(null);
         }
       } else {
         setCustomerId(null);
@@ -149,6 +166,40 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
       <Text style={typography.largeTitle}>Settings</Text>
+
+      {/* Payment Warning Banner */}
+      {subscriptionStatus && (subscriptionStatus.status === 'past_due' || subscriptionStatus.status === 'unpaid') && (
+        <View style={{
+          backgroundColor: colors.error + '20',
+          borderLeftWidth: 4,
+          borderLeftColor: colors.error,
+          padding: 16,
+          borderRadius: 8,
+          marginTop: 24,
+          marginBottom: 8,
+        }}>
+          <View style={styles.row}>
+            <IconSymbol name="exclamationmark.triangle.fill" size={24} color={colors.error} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={[typography.subheadMedium, { color: colors.error, marginBottom: 4 }]}>
+                Payment Issue
+              </Text>
+              <Text style={[typography.footnote, { color: colors.text }]}>
+                There was a problem with your last payment. Please update your payment method to continue service.
+              </Text>
+            </View>
+          </View>
+          <Pressable 
+            style={[styles.buttonSecondary, { marginTop: 12, backgroundColor: colors.error }]}
+            onPress={() => {
+              // TODO: Open Stripe billing portal
+              Alert.alert("Update Payment", "Payment update feature coming soon. Please contact support.");
+            }}
+          >
+            <Text style={[typography.subheadMedium, { color: '#FFFFFF' }]}>Update Payment Method</Text>
+          </Pressable>
+        </View>
+      )}
 
       {/* Account Section */}
       <View style={[styles.section, { marginTop: 24 }]}>

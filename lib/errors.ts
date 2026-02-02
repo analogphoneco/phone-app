@@ -61,18 +61,39 @@ function parseErrorMessage(message: string): AppError {
   
   // Payment errors
   if (lower.includes("payment") || lower.includes("card") || lower.includes("stripe")) {
-    if (lower.includes("declined")) {
+    if (lower.includes("declined") || lower.includes("do_not_honor")) {
       return {
         title: "Payment Declined",
-        message: "Your payment method was declined. Please check your card details and try again.",
-        action: "Update Payment",
+        message: "Your payment method was declined by your bank. Please check your card details or try a different card.",
+        action: "Try Different Card",
       };
     }
-    if (lower.includes("insufficient")) {
+    if (lower.includes("insufficient") || lower.includes("insufficient_funds")) {
       return {
         title: "Insufficient Funds",
         message: "Your payment method has insufficient funds. Please use a different payment method.",
         action: "Change Card",
+      };
+    }
+    if (lower.includes("expired") || lower.includes("card_expired")) {
+      return {
+        title: "Card Expired",
+        message: "Your card has expired. Please add a new payment method.",
+        action: "Update Card",
+      };
+    }
+    if (lower.includes("authentication") || lower.includes("3d secure")) {
+      return {
+        title: "Authentication Required",
+        message: "Your bank requires additional authentication. Please complete the verification with your bank.",
+        action: "Try Again",
+      };
+    }
+    if (lower.includes("fraud") || lower.includes("blocked")) {
+      return {
+        title: "Payment Blocked",
+        message: "This payment was blocked for security reasons. Please contact your bank or try a different card.",
+        action: "Contact Bank",
       };
     }
     return {

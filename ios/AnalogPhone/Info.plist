@@ -55,6 +55,8 @@
     </dict>
     <key>NSCameraUsageDescription</key>
     <string>Used to scan QR codes for device setup</string>
+    <key>NSContactsUsageDescription</key>
+    <string>Used to display caller names from your contacts</string>
     <key>NSFaceIDUsageDescription</key>
     <string>Allow $(PRODUCT_NAME) to access your Face ID biometric data.</string>
     <key>NSMicrophoneUsageDescription</key>

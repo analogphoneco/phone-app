@@ -7,6 +7,7 @@ import { useAppStyles } from "@/constants/styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getApiBase } from "../../lib/api";
 import { getCustomerId } from "../../lib/storage";
+import { parseError } from "../../lib/errors";
 
 interface Plan {
   id: string;
@@ -130,7 +131,23 @@ export default function Subscribe() {
       router.push({ pathname: "/setup/pick-number", params: { customerId, subscribed: "1" } });
       
     } catch (e: any) {
-      Alert.alert("Payment Failed", e?.message || "Unable to process payment");
+      const error = parseError(e);
+      
+      // Show error with option to retry
+      Alert.alert(
+        error.title,
+        error.message,
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: error.action || "Try Again", 
+            onPress: () => {
+              // Retry subscription
+              setTimeout(() => handleSubscribe(), 500);
+            }
+          }
+        ]
+      );
     } finally {
       setSubscribing(false);
     }
