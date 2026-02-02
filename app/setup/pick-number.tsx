@@ -6,6 +6,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { showError } from "@/lib/errors";
 
 // Format phone number to (555) 123-4567
 function formatPhoneNumber(phoneNumber: string): string {
@@ -112,7 +113,8 @@ export default function PickNumber() {
         } 
       });
     } catch (e: any) {
-      Alert.alert("Error", e?.message || String(e));
+      const err = showError(e);
+      Alert.alert(err.title, err.message, err.buttons);
     } finally {
       setPurchasing(null);
     }
@@ -120,6 +122,15 @@ export default function PickNumber() {
 
   return (
     <View style={[styles.screen, { paddingTop: 60 }]}>
+      {/* Back button */}
+      <Pressable 
+        style={{ flexDirection: "row", alignItems: "center", marginLeft: 24, marginBottom: 16 }}
+        onPress={() => router.back()}
+      >
+        <IconSymbol name="chevron.left" size={20} color={colors.tint} />
+        <Text style={[typography.callout, { color: colors.tint, marginLeft: 4 }]}>Back</Text>
+      </Pressable>
+
       {justSubscribed && (
         <View style={styles.successBanner}>
           <IconSymbol name="checkmark.circle.fill" size={20} color={colors.success} />

@@ -160,6 +160,15 @@ export default function Subscribe() {
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
+      {/* Back button */}
+      <Pressable 
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 24 }}
+        onPress={() => router.back()}
+      >
+        <IconSymbol name="chevron.left" size={20} color={colors.tint} />
+        <Text style={[typography.callout, { color: colors.tint, marginLeft: 4 }]}>Back</Text>
+      </Pressable>
+
       {/* Header */}
       <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 24 }]}>
         <IconSymbol name="creditcard.fill" size={48} color={colors.tint} />

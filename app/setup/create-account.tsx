@@ -27,14 +27,20 @@ export default function CreateAccount() {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedName = name.trim();
     
+    if (!trimmedName) {
+      return Alert.alert("Name Required", "Please enter your name to continue.");
+    }
+    if (trimmedName.length < 2) {
+      return Alert.alert("Name Too Short", "Please enter your full name (at least 2 characters).");
+    }
+    if (trimmedName.length > 100) {
+      return Alert.alert("Name Too Long", "Please enter a shorter name (maximum 100 characters).");
+    }
     if (!trimmedEmail) {
-      return Alert.alert("Email required", "Please enter your email address.");
+      return Alert.alert("Email Required", "Please enter your email address.");
     }
     if (!isValidEmail(trimmedEmail)) {
-      return Alert.alert("Invalid email", "Please enter a valid email address.");
-    }
-    if (!trimmedName) {
-      return Alert.alert("Name required", "Please enter your name.");
+      return Alert.alert("Invalid Email", "Please enter a valid email address (e.g., you@example.com).");
     }
 
     setLoading(true);
@@ -123,6 +129,15 @@ export default function CreateAccount() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        {/* Back button */}
+        <Pressable 
+          style={{ flexDirection: "row", alignItems: "center", marginBottom: 24 }}
+          onPress={() => router.back()}
+        >
+          <IconSymbol name="chevron.left" size={20} color={colors.tint} />
+          <Text style={[typography.callout, { color: colors.tint, marginLeft: 4 }]}>Back</Text>
+        </Pressable>
+
         <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 24 }]}>
           <IconSymbol name="envelope.badge.person.crop" size={48} color={colors.tint} />
         </View>
