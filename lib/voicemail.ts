@@ -143,6 +143,23 @@ export async function deleteVoicemail(voicemailId: string): Promise<void> {
 }
 
 /**
+ * Download voicemail recording
+ * Returns the recording URL that can be opened with Linking or downloaded
+ */
+export async function getVoicemailRecordingUrl(voicemailId: string): Promise<string | null> {
+  const headers = await getHeaders();
+  const response = await fetch(
+    `${API_BASE}/api/voicemails/${voicemailId}`,
+    { headers }
+  );
+  const data = await response.json();
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || "Failed to get voicemail");
+  }
+  return data.voicemail?.recording_url || null;
+}
+
+/**
  * Get voicemail greeting
  */
 export async function getVoicemailGreeting(customerId: string): Promise<VoicemailGreeting> {

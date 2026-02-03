@@ -21,6 +21,7 @@ import {
   listVoicemails,
   markVoicemailAsListened,
   deleteVoicemail,
+  getVoicemailRecordingUrl,
   formatDuration,
   formatPhoneNumber,
   formatRelativeTime,
@@ -81,6 +82,20 @@ export default function VoicemailScreen() {
         },
       },
     ]);
+  };
+
+  const handleDownload = async (vm: Voicemail) => {
+    try {
+      const url = await getVoicemailRecordingUrl(vm.id);
+      if (url) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Error", "Recording not available for this voicemail");
+      }
+    } catch (e: unknown) {
+      const error = showError(e);
+      Alert.alert(error.title, error.message, error.buttons);
+    }
   };
 
   const renderVoicemail = ({ item: vm }: { item: Voicemail }) => {
@@ -152,6 +167,14 @@ export default function VoicemailScreen() {
               </ThemedText>
             )}
           </View>
+
+          {/* Download button */}
+          <Pressable
+            onPress={() => handleDownload(vm)}
+            style={{ padding: 8, marginLeft: 8 }}
+          >
+            <IconSymbol name="arrow.down.circle" size={20} color={colors.tint} />
+          </Pressable>
 
           {/* Delete button */}
           <Pressable
