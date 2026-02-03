@@ -79,3 +79,34 @@ export async function checkAndRefreshApiKey(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Get payment failures for a customer
+ * Returns array of unresolved payment failures
+ */
+export async function getPaymentFailures(customerId: string): Promise<any[]> {
+  try {
+    const apiKey = await getApiKey();
+    if (!apiKey) {
+      throw new Error("No API key found");
+    }
+    
+    const response = await fetch(`${getApiBase()}/api/customers/${customerId}/payment-failures`, {
+      headers: {
+        "x-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+    });
+    
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || "Failed to fetch payment failures");
+    }
+    
+    return data.paymentFailures || [];
+  } catch (e) {
+    console.error("Error fetching payment failures:", e);
+    return [];
+  }
+}
+

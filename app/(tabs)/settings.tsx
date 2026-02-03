@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, ScrollView, Pressable, Alert, Linking, ActivityIndicator } from "react-native";
-import { getApiBase, checkAndRefreshApiKey } from "../../lib/api";
+import { getApiBase, checkAndRefreshApiKey, getPaymentFailures } from "../../lib/api";
 import { getCredentials, clearCredentials, getCustomerId, getApiKey } from "../../lib/storage";
 import { useRouter, useFocusEffect } from "expo-router";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -47,6 +47,7 @@ export default function SettingsScreen() {
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus | null>(null);
+  const [paymentFailures, setPaymentFailures] = useState<any[]>([]);
 
   const loadData = useCallback(async () => {
     try {
@@ -84,10 +85,15 @@ export default function SettingsScreen() {
         
         // Check API key expiration
         await checkApiKeyExpiration(creds.customerId);
+        
+        // Check payment failures
+        const failures = await getPaymentFailures(creds.customerId);
+        setPaymentFailures(failures);
       } else {
         setCustomerId(null);
         setDevice(null);
         setSubscriptionId(null);
+        setPaymentFailures([]);
       }
     } catch (e) {
       console.log("[Settings] Error loading data:", e);
@@ -250,6 +256,46 @@ export default function SettingsScreen() {
               <Text style={[typography.footnote, { color: colors.text }]}>
                 There was a problem with your last payment. Please update your payment method to continue service.
               </Text>
+            </View>
+          </View>
+          <Pressable 
+            style={[styles.buttonSecondary, { marginTop: 12, backgroundColor: colors.error }]}
+            onPress={openBillingPortal}
+          >
+            <Text style={[typography.subheadMedium, { color: '#FFFFFF' }]}>Update Payment Method</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Payment Failure Warning Banner */}
+      {paymentFailures.length > 0 && (
+        <View style={{
+          backgroundColor: colors.error + '20',
+          borderLeftWidth: 4,
+          borderLeftColor: colors.error,
+          padding: 16,
+          borderRadius: 8,
+          marginTop: 8,
+          marginBottom: 8,
+        }}>
+          <View style={styles.row}>
+            <IconSymbol name="exclamationmark.triangle.fill" size={24} color={colors.error} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={[typography.subheadMedium, { color: colors.error, marginBottom: 4 }]}>
+                Payment Failed
+              </Text>
+              {paymentFailures.map((failure, index) => {
+                const gracePeriodEnds = new Date(failure.grace_period_ends);
+                const daysRemaining = Math.ceil((gracePeriodEnds.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                return (
+                  <Text key={index} style={[typography.footnote, { color: colors.text, marginTop: index > 0 ? 8 : 0 }]}>
+                    {failure.attempt_count > 1 ? `${failure.attempt_count} payment attempts failed. ` : 'Your payment failed. '}
+                    {daysRemaining > 0 
+                      ? `Update your payment method within ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'} to avoid service interruption.`
+                      : 'Your service may be suspended. Update payment method immediately.'}
+                  </Text>
+                );
+              })}
             </View>
           </View>
           <Pressable 
