@@ -3,6 +3,7 @@ import { View, Text, Pressable, RefreshControl, ScrollView, Alert } from "react-
 import { Link, useFocusEffect, useRouter } from "expo-router";
 import { getApiBase } from "../../lib/api";
 import { getCredentials, clearCredentials } from "../../lib/storage";
+import { getActiveSubscription } from "../../lib/subscription";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
@@ -10,6 +11,21 @@ import { useAppStyles } from "@/constants/styles";
 interface DeviceInfo {
   user_name?: string;
   phone_number?: string;
+}
+
+interface UsageStats {
+  monthlyMinutes: { used: number; limit: number; percent: number };
+  monthlyCalls: { used: number; limit: number; percent: number };
+  activeCalls: number;
+  hourlyCallsRemaining: number;
+}
+
+interface UsageAlert {
+  id: number;
+  alert_type: string;
+  message: string;
+  created_at: string;
+  acknowledged: number;
 }
 
 export default function HomeScreen() {
@@ -23,6 +39,9 @@ export default function HomeScreen() {
   const [device, setDevice] = useState<DeviceInfo | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [hasStaleCreds, setHasStaleCreds] = useState(false);
+  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
+  const [usageAlerts, setUsageAlerts] = useState<UsageAlert[]>([]);
+  const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -47,6 +66,9 @@ export default function HomeScreen() {
           console.log("[Home] Device data:", JSON.stringify(data));
           setDevice(data.device || null);
           setHasStaleCreds(false);
+          
+          // Load usage stats for warnings
+          loadUsageData(creds.customerId);
         } else {
           console.log("[Home] Device fetch failed:", res.status);
           setDevice(null);
@@ -64,6 +86,26 @@ export default function HomeScreen() {
       console.log("[Home] Error loading data:", e);
     }
   }, []);
+
+  const loadUsageData = async (custId: string) => {
+    try {
+      // Get active subscription
+      const sub = await getActiveSubscription(custId);
+      if (sub?.id) {
+        setSubscriptionId(sub.id);
+        
+        // Get usage stats
+        const res = await fetch(`${getApiBase()}/api/subscriptions/${sub.id}/usage`);
+        if (res.ok) {
+          const data = await res.json();
+          setUsageStats(data.usage);
+          setUsageAlerts(data.alerts || []);
+        }
+      }
+    } catch (e) {
+      console.log("[Home] Error loading usage data:", e);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -113,6 +155,46 @@ export default function HomeScreen() {
           </Text>
         </View>
       </View>
+
+      {/* Usage Warning Banner */}
+      {usageStats && (usageStats.monthlyMinutes.percent >= 80 || usageStats.monthlyCalls.percent >= 80) && (
+        <View style={{
+          backgroundColor: colors.warning + '20',
+          borderLeftWidth: 4,
+          borderLeftColor: colors.warning,
+          padding: 16,
+          borderRadius: 8,
+          marginBottom: 24,
+        }}>
+          <View style={styles.row}>
+            <IconSymbol name="exclamationmark.triangle.fill" size={24} color={colors.warning} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={[typography.subheadMedium, { color: colors.warning, marginBottom: 4 }]}>
+                High Usage Alert
+              </Text>
+              {usageStats.monthlyMinutes.percent >= 80 && (
+                <Text style={[typography.footnote, { color: colors.text, marginBottom: 4 }]}>
+                  • {usageStats.monthlyMinutes.percent}% of monthly minutes used ({usageStats.monthlyMinutes.used} / {usageStats.monthlyMinutes.limit})
+                </Text>
+              )}
+              {usageStats.monthlyCalls.percent >= 80 && (
+                <Text style={[typography.footnote, { color: colors.text, marginBottom: 4 }]}>
+                  • {usageStats.monthlyCalls.percent}% of monthly calls used ({usageStats.monthlyCalls.used} / {usageStats.monthlyCalls.limit})
+                </Text>
+              )}
+              <Text style={[typography.caption, { color: colors.icon, marginTop: 4 }]}>
+                Usage resets at the start of your next billing period
+              </Text>
+            </View>
+          </View>
+          <Pressable 
+            style={[styles.buttonSecondary, { marginTop: 12, backgroundColor: colors.warning }]}
+            onPress={() => router.push('/(tabs)/settings')}
+          >
+            <Text style={[typography.subheadMedium, { color: '#FFFFFF' }]}>View Details</Text>
+          </Pressable>
+        </View>
+      )}
 
       {isSetupComplete ? (
         <View style={[styles.cardLarge, styles.center, { marginBottom: 24 }]}>
