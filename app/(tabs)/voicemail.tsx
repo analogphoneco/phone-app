@@ -14,6 +14,7 @@ import { useFocusEffect } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { AudioPlayer } from "@/components/audio-player";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { getCustomerId } from "@/lib/storage";
@@ -242,23 +243,55 @@ export default function VoicemailScreen() {
                 "{vm.transcription}"
               </ThemedText>
             )}
+
+            {/* Audio Player */}
+            {vm.recording_url && (
+              <View style={{ marginTop: 8 }}>
+                <AudioPlayer
+                  url={vm.recording_url}
+                  colors={colors}
+                  typography={typography}
+                />
+              </View>
+            )}
+
+            {/* Action buttons */}
+            <View style={{ flexDirection: "row", marginTop: 8, gap: 8 }}>
+              {/* Download button */}
+              <Pressable
+                onPress={() => handleDownload(vm)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingVertical: 6,
+                  paddingHorizontal: 12,
+                  borderRadius: 6,
+                  backgroundColor: colors.surface,
+                  gap: 6,
+                }}
+              >
+                <IconSymbol name="arrow.down.circle" size={16} color={colors.tint} />
+                <Text style={[typography.footnote, { color: colors.tint }]}>Download</Text>
+              </Pressable>
+
+              {/* Delete button */}
+              <Pressable
+                onPress={() => handleDelete(vm)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingVertical: 6,
+                  paddingHorizontal: 12,
+                  borderRadius: 6,
+                  backgroundColor: colors.surface,
+                  gap: 6,
+                }}
+              >
+                <IconSymbol name="trash" size={16} color={colors.error} />
+                <Text style={[typography.footnote, { color: colors.error }]}>Delete</Text>
+              </Pressable>
+            </View>
           </View>
-
-          {/* Download button */}
-          <Pressable
-            onPress={() => handleDownload(vm)}
-            style={{ padding: 8, marginLeft: 8 }}
-          >
-            <IconSymbol name="arrow.down.circle" size={20} color={colors.tint} />
-          </Pressable>
-
-          {/* Delete button */}
-          <Pressable
-            onPress={() => handleDelete(vm)}
-            style={{ padding: 8, marginLeft: 8 }}
-          >
-            <IconSymbol name="trash" size={20} color={colors.error} />
-          </Pressable>
         </View>
       </View>
     );
