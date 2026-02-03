@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, ScrollView, Pressable, Alert, Linking, ActivityIndicator } from "react-native";
-import { getApiBase } from "../../lib/api";
-import { getCredentials, clearCredentials } from "../../lib/storage";
+import { getApiBase, checkAndRefreshApiKey } from "../../lib/api";
+import { getCredentials, clearCredentials, getCustomerId, getApiKey } from "../../lib/storage";
 import { useRouter, useFocusEffect } from "expo-router";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -27,6 +27,12 @@ interface SubscriptionStatus {
   cancelAtPeriodEnd?: boolean;
 }
 
+interface ApiKeyStatus {
+  expiresAt: string | null;
+  daysUntilExpiry: number | null;
+  isExpiringSoon: boolean;
+}
+
 export default function SettingsScreen() {
   const colorScheme = useColorScheme();
   const { colors, typography, styles } = useAppStyles(colorScheme);
@@ -40,6 +46,7 @@ export default function SettingsScreen() {
   const [usageLoading, setUsageLoading] = useState(false);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -74,6 +81,9 @@ export default function SettingsScreen() {
           setSubscriptionId(null);
           setSubscriptionStatus(null);
         }
+        
+        // Check API key expiration
+        await checkApiKeyExpiration(creds.customerId);
       } else {
         setCustomerId(null);
         setDevice(null);
@@ -85,6 +95,41 @@ export default function SettingsScreen() {
       setLoading(false);
     }
   }, []);
+
+  // Check API key expiration status
+  const checkApiKeyExpiration = async (custId: string) => {
+    try {
+      const res = await fetch(`${getApiBase()}/api/customers/${custId}`, {
+        headers: {
+          'x-api-key': await getApiKey() || '',
+        },
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        const apiKey = data.customer?.apiKey;
+        const apiKeyExpiration = data.customer?.apiKeyExpiration;
+        
+        if (apiKeyExpiration) {
+          const expiresAt = new Date(apiKeyExpiration);
+          const now = new Date();
+          const daysUntilExpiry = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          const isExpiringSoon = daysUntilExpiry <= 7 && daysUntilExpiry >= 0;
+          
+          setApiKeyStatus({
+            expiresAt: apiKeyExpiration,
+            daysUntilExpiry,
+            isExpiringSoon,
+          });
+        } else {
+          setApiKeyStatus(null);
+        }
+      }
+    } catch (e) {
+      console.log("[Settings] Error checking API key expiration:", e);
+      setApiKeyStatus(null);
+    }
+  };
 
   // Load usage stats when expanded
   const loadUsageStats = useCallback(async () => {
@@ -197,6 +242,48 @@ export default function SettingsScreen() {
             }}
           >
             <Text style={[typography.subheadMedium, { color: '#FFFFFF' }]}>Update Payment Method</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Session Expiration Warning Banner */}
+      {apiKeyStatus?.isExpiringSoon && apiKeyStatus.daysUntilExpiry !== null && (
+        <View style={{
+          backgroundColor: colors.warning + '20',
+          borderLeftWidth: 4,
+          borderLeftColor: colors.warning,
+          padding: 16,
+          borderRadius: 8,
+          marginTop: subscriptionStatus && (subscriptionStatus.status === 'past_due' || subscriptionStatus.status === 'unpaid') ? 8 : 24,
+          marginBottom: 8,
+        }}>
+          <View style={styles.row}>
+            <IconSymbol name="clock.badge.exclamationmark.fill" size={24} color={colors.warning} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={[typography.subheadMedium, { color: colors.warning, marginBottom: 4 }]}>
+                Session Expiring Soon
+              </Text>
+              <Text style={[typography.footnote, { color: colors.text }]}>
+                Your session will expire in {apiKeyStatus.daysUntilExpiry} {apiKeyStatus.daysUntilExpiry === 1 ? 'day' : 'days'}. 
+                {apiKeyStatus.daysUntilExpiry <= 1 ? ' Refresh now to stay signed in.' : ' Open the app to refresh automatically.'}
+              </Text>
+            </View>
+          </View>
+          <Pressable 
+            style={[styles.buttonSecondary, { marginTop: 12, backgroundColor: colors.warning }]}
+            onPress={async () => {
+              const success = await checkAndRefreshApiKey();
+              if (success) {
+                Alert.alert("Session Refreshed", "Your session has been extended for another 90 days.");
+                if (customerId) {
+                  await checkApiKeyExpiration(customerId);
+                }
+              } else {
+                Alert.alert("Refresh Failed", "Could not refresh your session. Please try signing out and back in.");
+              }
+            }}
+          >
+            <Text style={[typography.subheadMedium, { color: '#FFFFFF' }]}>Refresh Session Now</Text>
           </Pressable>
         </View>
       )}
