@@ -31,6 +31,12 @@ import {
   type Voicemail,
   type VoicemailGreeting,
 } from "@/lib/voicemail";
+import {
+  loadContactsCache,
+  getContactName,
+  hasContactsPermission,
+  requestContactsPermission,
+} from "@/lib/contacts";
 
 export default function VoicemailScreen() {
   const colorScheme = useColorScheme();
@@ -44,6 +50,25 @@ export default function VoicemailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [savingGreeting, setSavingGreeting] = useState(false);
+  const [contactsLoaded, setContactsLoaded] = useState(false);
+
+  // Load contacts on mount
+  React.useEffect(() => {
+    (async () => {
+      const hasPermission = await hasContactsPermission();
+      if (hasPermission) {
+        await loadContactsCache();
+        setContactsLoaded(true);
+      } else {
+        // Silently try to request permission
+        const granted = await requestContactsPermission();
+        if (granted) {
+          await loadContactsCache();
+          setContactsLoaded(true);
+        }
+      }
+    })();
+  }, []);
 
   const loadVoicemails = useCallback(async (showRefresh = false) => {
     try {
@@ -166,9 +191,24 @@ export default function VoicemailScreen() {
           {/* Info */}
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <ThemedText style={[typography.subheadMedium, { flex: 1 }]}>
-                {formatPhoneNumber(vm.from_number)}
-              </ThemedText>
+              <View style={{ flex: 1 }}>
+                {(() => {
+                  const contactName = getContactName(vm.from_number);
+                  const displayName = contactName || formatPhoneNumber(vm.from_number);
+                  return (
+                    <>
+                      <ThemedText style={typography.subheadMedium}>
+                        {displayName}
+                      </ThemedText>
+                      {contactName && (
+                        <ThemedText style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
+                          {formatPhoneNumber(vm.from_number)}
+                        </ThemedText>
+                      )}
+                    </>
+                  );
+                })()}
+              </View>
               {vm.is_new ? (
                 <View
                   style={{
