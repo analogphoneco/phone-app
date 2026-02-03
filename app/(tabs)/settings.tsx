@@ -7,7 +7,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import Constants from "expo-constants";
-import { getActiveSubscription } from "@/lib/subscription";
+import { getActiveSubscription, getBillingPortalUrl } from "@/lib/subscription";
 
 interface DeviceInfo {
   user_name?: string;
@@ -208,6 +208,24 @@ export default function SettingsScreen() {
     Linking.openURL(url).catch((e) => Alert.alert("Error", String(e)));
   }
 
+  async function openBillingPortal() {
+    if (!customerId) return;
+    
+    try {
+      const returnUrl = "analogphone://settings"; // Deep link back to settings
+      const url = await getBillingPortalUrl(customerId, returnUrl);
+      
+      if (url) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert("Error", "Could not generate billing portal URL. Please try again.");
+      }
+    } catch (e: any) {
+      console.error("Error opening billing portal:", e);
+      Alert.alert("Error", e.message || "Could not open billing portal. Please try again.");
+    }
+  }
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
       <Text style={typography.largeTitle}>Settings</Text>
@@ -236,10 +254,7 @@ export default function SettingsScreen() {
           </View>
           <Pressable 
             style={[styles.buttonSecondary, { marginTop: 12, backgroundColor: colors.error }]}
-            onPress={() => {
-              // TODO: Open Stripe billing portal
-              Alert.alert("Update Payment", "Payment update feature coming soon. Please contact support.");
-            }}
+            onPress={openBillingPortal}
           >
             <Text style={[typography.subheadMedium, { color: '#FFFFFF' }]}>Update Payment Method</Text>
           </Pressable>
@@ -473,6 +488,15 @@ export default function SettingsScreen() {
                   <Text style={[typography.caption, { color: colors.icon, marginTop: 12, textAlign: 'center' }]}>
                     Usage resets at the start of each billing period
                   </Text>
+                  
+                  {/* Manage Billing Button */}
+                  <Pressable 
+                    style={[styles.buttonSecondary, { marginTop: 16 }]}
+                    onPress={openBillingPortal}
+                  >
+                    <IconSymbol name="creditcard" size={18} color={colors.tint} style={{ marginRight: 8 }} />
+                    <Text style={[typography.subheadMedium, { color: colors.tint }]}>Manage Billing</Text>
+                  </Pressable>
                 </>
               ) : (
                 <Text style={[typography.footnote, { color: colors.icon, textAlign: 'center' }]}>
