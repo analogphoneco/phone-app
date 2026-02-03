@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Linking,
+  TextInput,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { ThemedView } from "@/components/themed-view";
@@ -22,10 +23,13 @@ import {
   markVoicemailAsListened,
   deleteVoicemail,
   getVoicemailRecordingUrl,
+  getVoicemailGreeting,
+  setVoicemailGreetingText,
   formatDuration,
   formatPhoneNumber,
   formatRelativeTime,
   type Voicemail,
+  type VoicemailGreeting,
 } from "@/lib/voicemail";
 
 export default function VoicemailScreen() {
@@ -34,8 +38,12 @@ export default function VoicemailScreen() {
 
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [voicemails, setVoicemails] = useState<Voicemail[]>([]);
+  const [greeting, setGreeting] = useState<VoicemailGreeting | null>(null);
+  const [editingGreeting, setEditingGreeting] = useState(false);
+  const [greetingInput, setGreetingInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [savingGreeting, setSavingGreeting] = useState(false);
 
   const loadVoicemails = useCallback(async (showRefresh = false) => {
     try {
@@ -45,12 +53,18 @@ export default function VoicemailScreen() {
       if (!cid) {
         setCustomerId(null);
         setVoicemails([]);
+        setGreeting(null);
         return;
       }
       
       setCustomerId(cid);
       const { voicemails: vms } = await listVoicemails(cid);
       setVoicemails(vms);
+      
+      // Load greeting
+      const greetingData = await getVoicemailGreeting(cid);
+      setGreeting(greetingData);
+      setGreetingInput(greetingData.greeting_text || "");
     } catch (e) {
       console.log("[Voicemail] Error loading:", e);
     } finally {
@@ -96,6 +110,28 @@ export default function VoicemailScreen() {
       const error = showError(e);
       Alert.alert(error.title, error.message, error.buttons);
     }
+  };
+
+  const handleSaveGreeting = async () => {
+    if (!customerId) return;
+    
+    try {
+      setSavingGreeting(true);
+      const updatedGreeting = await setVoicemailGreetingText(customerId, greetingInput.trim());
+      setGreeting(updatedGreeting);
+      setEditingGreeting(false);
+      Alert.alert("Success", "Your voicemail greeting has been updated");
+    } catch (e: unknown) {
+      const error = showError(e);
+      Alert.alert(error.title, error.message, error.buttons);
+    } finally {
+      setSavingGreeting(false);
+    }
+  };
+
+  const handleCancelGreeting = () => {
+    setGreetingInput(greeting?.greeting_text || "");
+    setEditingGreeting(false);
   };
 
   const renderVoicemail = ({ item: vm }: { item: Voicemail }) => {
@@ -220,6 +256,99 @@ export default function VoicemailScreen() {
         }
       >
         <Text style={typography.largeTitle}>Voicemail</Text>
+
+        {/* Greeting Management */}
+        <View style={[styles.section, { marginTop: 24 }]}>
+          <View style={styles.sectionTitleContainer}>
+            <Text style={typography.sectionHeader}>Your Greeting</Text>
+            {!editingGreeting && (
+              <Pressable onPress={() => setEditingGreeting(true)}>
+                <IconSymbol name="pencil" size={18} color={colors.tint} />
+              </Pressable>
+            )}
+          </View>
+          <View style={styles.card}>
+            {editingGreeting ? (
+              <>
+                <TextInput
+                  value={greetingInput}
+                  onChangeText={setGreetingInput}
+                  placeholder="Enter your voicemail greeting..."
+                  placeholderTextColor={colors.icon}
+                  multiline
+                  numberOfLines={3}
+                  style={[
+                    typography.callout,
+                    {
+                      color: colors.text,
+                      backgroundColor: colors.surface,
+                      borderWidth: 1,
+                      borderColor: colors.icon + "40",
+                      borderRadius: 8,
+                      padding: 12,
+                      minHeight: 80,
+                      textAlignVertical: "top",
+                    },
+                  ]}
+                />
+                <View style={{ flexDirection: "row", marginTop: 12, gap: 12 }}>
+                  <Pressable
+                    onPress={handleSaveGreeting}
+                    disabled={savingGreeting || !greetingInput.trim()}
+                    style={[
+                      {
+                        flex: 1,
+                        backgroundColor: colors.tint,
+                        padding: 12,
+                        borderRadius: 8,
+                        alignItems: "center",
+                      },
+                      (savingGreeting || !greetingInput.trim()) && { opacity: 0.5 },
+                    ]}
+                  >
+                    {savingGreeting ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={[typography.callout, { color: "#fff", fontWeight: "600" }]}>
+                        Save
+                      </Text>
+                    )}
+                  </Pressable>
+                  <Pressable
+                    onPress={handleCancelGreeting}
+                    disabled={savingGreeting}
+                    style={{
+                      flex: 1,
+                      backgroundColor: colors.surface,
+                      borderWidth: 1,
+                      borderColor: colors.icon + "40",
+                      padding: 12,
+                      borderRadius: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={[typography.callout, { color: colors.text, fontWeight: "600" }]}>
+                      Cancel
+                    </Text>
+                  </Pressable>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                  <IconSymbol name="quote.bubble" size={20} color={colors.icon} style={{ marginRight: 12, marginTop: 2 }} />
+                  <ThemedText style={[typography.callout, { flex: 1 }]}>
+                    {greeting?.greeting_text || "Please leave a message after the beep."}
+                  </ThemedText>
+                </View>
+                <View style={[styles.divider, { marginVertical: 12 }]} />
+                <ThemedText style={[typography.footnote, { color: colors.icon }]}>
+                  This message will be played when callers reach your voicemail
+                </ThemedText>
+              </>
+            )}
+          </View>
+        </View>
 
         {/* Voicemail List (if any) */}
         {voicemails.length > 0 && (
