@@ -19,7 +19,7 @@ import { Colors } from '@/constants/theme';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { checkAndRefreshApiKey } from '@/lib/api';
 
-const STRIPE_PUBLISHABLE_KEY = 'pk_test_51SvSh4GlDwPdxwVUluBGsQF738c9x2PPufX1PLluhXUCbplr3Z94jXYsNW7Kz9pgeZLHfLALGj77VGDVFVHcVqt500sjvHFGwJ';
+const STRIPE_PUBLISHABLE_KEY = 'pk_live_51SvSglGpYTutwIm7beYnJcGNNSxxNnQLltR2ZU24R4lp4s0mUsQr3cKdgOSxuhddGUlfzSao11YoNiaCLSv8xBEB004z5ssKE3';
 
 export const unstable_settings = {
   anchor: '(tabs)',
