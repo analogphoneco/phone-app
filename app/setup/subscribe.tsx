@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, TextInput } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useStripe } from "@stripe/stripe-react-native";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -30,6 +30,9 @@ export default function Subscribe() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [promoApplied, setPromoApplied] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -88,7 +91,11 @@ export default function Subscribe() {
       const subRes = await fetch(`${getApiBase()}/api/subscriptions`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ customerId, planId: plan.id }),
+        body: JSON.stringify({ 
+          customerId, 
+          planId: plan.id,
+          ...(promoCode.trim() ? { promoCode: promoCode.trim() } : {})
+        }),
       });
       const subData = await subRes.json();
       
@@ -270,6 +277,47 @@ export default function Subscribe() {
             </View>
           ))}
         </View>
+      </View>
+
+      {/* Promo Code Section */}
+      <View style={{ marginBottom: 24 }}>
+        <Text style={[typography.subheadMedium, { marginBottom: 8 }]}>Have a promo code?</Text>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <TextInput
+            value={promoCode}
+            onChangeText={(text) => {
+              setPromoCode(text);
+              setPromoApplied(false);
+            }}
+            placeholder="Enter code"
+            placeholderTextColor={colors.icon}
+            style={[styles.input, { flex: 1 }]}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            editable={!promoApplied}
+          />
+          {promoApplied && (
+            <View style={{ 
+              justifyContent: "center", 
+              alignItems: "center",
+              paddingHorizontal: 12,
+              backgroundColor: colors.success + "20",
+              borderRadius: 8
+            }}>
+              <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
+            </View>
+          )}
+        </View>
+        {promoApplied && (
+          <Text style={[typography.caption, { color: colors.success, marginTop: 8 }]}>
+            ✓ Promo code will be applied at checkout
+          </Text>
+        )}
+        {promoCode.trim() && !promoApplied && (
+          <Text style={[typography.caption, { color: colors.icon, marginTop: 8 }]}>
+            Code will be validated when you subscribe
+          </Text>
+        )}
       </View>
 
       {/* Subscribe Button */}
