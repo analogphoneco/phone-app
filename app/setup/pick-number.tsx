@@ -61,8 +61,28 @@ export default function PickNumber() {
         headers: { "X-Api-Key": apiKey }
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || JSON.stringify(data));
-      setNumbers(Array.isArray(data.results) ? data.results : []);
+      
+      if (!res.ok) {
+        // Better error handling
+        const errorMsg = data?.error?.message || data?.error || data?.message || "Failed to fetch numbers";
+        throw new Error(errorMsg);
+      }
+      
+      const results = Array.isArray(data.results) ? data.results : [];
+      setNumbers(results);
+      
+      // If no results, show helpful message
+      if (results.length === 0 && searchAreaCode) {
+        Alert.alert(
+          "No Numbers Available", 
+          `No phone numbers found for area code ${searchAreaCode}. Try a different area code or search without filtering.`
+        );
+      } else if (results.length === 0) {
+        Alert.alert(
+          "No Numbers Available", 
+          "No phone numbers are currently available. Please try again later."
+        );
+      }
     } catch (e: any) {
       Alert.alert("Error", e?.message || String(e));
     } finally {
