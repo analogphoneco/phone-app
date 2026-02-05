@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, TextInput } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useStripe } from "@stripe/stripe-react-native";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -230,15 +230,24 @@ export default function Subscribe() {
   }
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
-      {/* Back button */}
-      <Pressable 
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 24 }}
-        onPress={() => router.back()}
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={0}
+    >
+      <ScrollView 
+        style={styles.screen} 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
       >
-        <IconSymbol name="chevron.left" size={20} color={colors.tint} />
-        <Text style={[typography.callout, { color: colors.tint, marginLeft: 4 }]}>Back</Text>
-      </Pressable>
+        {/* Back button */}
+        <Pressable 
+          style={{ flexDirection: "row", alignItems: "center", marginBottom: 24 }}
+          onPress={() => router.back()}
+        >
+          <IconSymbol name="chevron.left" size={20} color={colors.tint} />
+          <Text style={[typography.callout, { color: colors.tint, marginLeft: 4 }]}>Back</Text>
+        </Pressable>
 
       {/* Header */}
       <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 24 }]}>
@@ -337,6 +346,7 @@ export default function Subscribe() {
       <Text style={[typography.caption, { color: colors.icon, textAlign: "center", marginTop: 24 }]}>
         Cancel anytime. You'll be charged {formatPrice(plan.priceCents)}/{plan.interval}.
       </Text>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
