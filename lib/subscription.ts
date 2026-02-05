@@ -28,8 +28,6 @@ import type {
   ApiResponse,
 } from "../types/subscription";
 
-const API_BASE = getApiBase();
-
 // ---- Helper Functions ----
 
 async function getHeaders(): Promise<Record<string, string>> {
@@ -45,7 +43,8 @@ async function fetchApi<T extends ApiResponse>(
   options: RequestInit = {}
 ): Promise<T> {
   const headers = await getHeaders();
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  const apiBase = getApiBase(); // Get dynamically each time
+  const response = await fetch(`${apiBase}${endpoint}`, {
     ...options,
     headers: { ...headers, ...options.headers },
   });
@@ -194,8 +193,9 @@ export async function getPaymentSheetParams(
   publishableKey: string;
 }> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/customers/${customerId}/payment-sheet`,
+    `${apiBase}/api/customers/${customerId}/payment-sheet`,
     {
       method: "POST",
       headers,
@@ -231,8 +231,9 @@ export async function getSubscriptionPaymentSheetParams(
   publishableKey: string;
 }> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/subscriptions/${subscriptionId}/payment-sheet`,
+    `${apiBase}/api/subscriptions/${subscriptionId}/payment-sheet`,
     {
       method: "POST",
       headers,
@@ -275,8 +276,9 @@ export async function getCheckoutSessionUrl(
   planId: string
 ): Promise<string> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/customers/${customerId}/checkout-session`,
+    `${apiBase}/api/customers/${customerId}/checkout-session`,
     {
       method: "POST",
       headers,

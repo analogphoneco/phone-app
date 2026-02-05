@@ -39,8 +39,9 @@ export default function RootLayout() {
 
   // Check and refresh API key on app start
   useEffect(() => {
-    checkAndRefreshApiKey().catch(err => {
-      console.log("Failed to refresh API key on startup:", err);
+    checkAndRefreshApiKey().catch(() => {
+      // Silently fail - user might not have an account yet
+      // or key might be invalid/expired (they'll need to re-authenticate)
     });
   }, []);
 

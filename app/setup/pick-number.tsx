@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, TextInput } from "react-native";
 import { getApiBase } from "../../lib/api";
-import { getCredentials } from "../../lib/storage";
+import { getCredentials, getApiKey } from "../../lib/storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
@@ -47,12 +47,19 @@ export default function PickNumber() {
   async function fetchNumbers(searchAreaCode?: string) {
     setLoading(true);
     try {
+      const apiKey = await getApiKey();
+      if (!apiKey) {
+        throw new Error("Not authenticated. Please restart the app.");
+      }
+
       // Only fetch local numbers (no toll-free)
       let url = `${getApiBase()}/api/telnyx/numbers?country=US&limit=20&type=local`;
       if (searchAreaCode && searchAreaCode.length === 3) {
         url += `&area_code=${searchAreaCode}`;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: { "X-Api-Key": apiKey }
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || JSON.stringify(data));
       setNumbers(Array.isArray(data.results) ? data.results : []);
@@ -77,10 +84,20 @@ export default function PickNumber() {
     if (!customerId) return Alert.alert("No account", "Please create an account first.");
     setPurchasing(number);
     try {
+      const apiKey = await getApiKey();
+      if (!apiKey) {
+        throw new Error("Not authenticated. Please restart the app.");
+      }
+
+      const headers = {
+        "Content-Type": "application/json",
+        "X-Api-Key": apiKey,
+      };
+
       // Step 1: Purchase the phone number
       const purchaseRes = await fetch(`${getApiBase()}/api/telnyx/purchase`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ phone_number: number, customerId }),
       });
       const purchaseData = await purchaseRes.json();
@@ -93,7 +110,7 @@ export default function PickNumber() {
       // Step 2: Auto-provision SIP credential for the device
       const provRes = await fetch(`${getApiBase()}/api/telnyx/provision`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ customerId, name: "Phone" }),
       });
       const provData = await provRes.json();

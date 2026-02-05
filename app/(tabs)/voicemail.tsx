@@ -124,20 +124,6 @@ export default function VoicemailScreen() {
     ]);
   };
 
-  const handleDownload = async (vm: Voicemail) => {
-    try {
-      const url = await getVoicemailRecordingUrl(vm.id);
-      if (url) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert("Error", "Recording not available for this voicemail");
-      }
-    } catch (e: unknown) {
-      const error = showError(e);
-      Alert.alert(error.title, error.message, error.buttons);
-    }
-  };
-
   const handleSaveGreeting = async () => {
     if (!customerId) return;
     
@@ -257,23 +243,6 @@ export default function VoicemailScreen() {
 
             {/* Action buttons */}
             <View style={{ flexDirection: "row", marginTop: 8, gap: 8 }}>
-              {/* Download button */}
-              <Pressable
-                onPress={() => handleDownload(vm)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingVertical: 6,
-                  paddingHorizontal: 12,
-                  borderRadius: 6,
-                  backgroundColor: colors.surface,
-                  gap: 6,
-                }}
-              >
-                <IconSymbol name="arrow.down.circle" size={16} color={colors.tint} />
-                <Text style={[typography.footnote, { color: colors.tint }]}>Download</Text>
-              </Pressable>
-
               {/* Delete button */}
               <Pressable
                 onPress={() => handleDelete(vm)}

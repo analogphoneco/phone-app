@@ -3,36 +3,19 @@ import Constants from "expo-constants";
 import { getApiKey, saveApiKey, getCustomerId } from "./storage";
 
 // Minimal helper to pick a reachable backend base URL depending on environment.
-// - iOS simulator: always use 127.0.0.1 (most reliable)
-// - Android emulator: use 10.0.2.2 which routes to host machine
-// - Physical devices / other: use expo `extra.api` if provided, else localhost
+// - iOS simulator: use localhost
+// - Android emulator: use 10.0.2.2 which routes to host machine (or Railway)
+// - Physical devices: use Railway production backend
 export function getApiBase(port = 4000) {
-  // iOS simulator: always use 127.0.0.1 directly (extra.api is for physical devices)
-  if (Platform.OS === "ios" && !Constants.isDevice) {
-    return `http://127.0.0.1:${port}`;
-  }
-
-  // Android emulator: use special IP that maps to host localhost
-  if (Platform.OS === "android" && !Constants.isDevice) {
-    return `http://10.0.2.2:${port}`;
-  }
-
-  // Physical devices: use extra.api if configured
-  const expoExtra = (Constants?.manifest?.extra ?? Constants?.expoConfig?.extra) as
-    | Record<string, any>
-    | undefined;
-
-  if (expoExtra && typeof expoExtra.api === "string" && expoExtra.api.length > 0) {
-    return expoExtra.api;
-  }
-
-  // Fallback to production backend for physical devices
-  if (Constants.isDevice) {
-    return "https://analog-phone-backend-production.up.railway.app";
-  }
-
-  // Last resort fallback
-  return `http://localhost:${port}`;
+  // Production: Always use Railway backend
+  // For local development, comment this out and uncomment localhost below
+  return "https://analog-phone-backend-production.up.railway.app";
+  
+  // Local development (uncomment when developing locally):
+  // if (Platform.OS === "ios" && !Constants.isDevice) {
+  //   return `http://127.0.0.1:${port}`;
+  // }
+  // return "https://analog-phone-backend-production.up.railway.app";
 }
 
 /**
@@ -45,7 +28,7 @@ export async function checkAndRefreshApiKey(): Promise<boolean> {
     const customerId = await getCustomerId();
     
     if (!apiKey || !customerId) {
-      console.log("No API key or customer ID found");
+      // No credentials yet - user hasn't created account
       return false;
     }
     
@@ -61,7 +44,12 @@ export async function checkAndRefreshApiKey(): Promise<boolean> {
     });
     
     if (!response.ok) {
-      console.error("Failed to refresh API key:", await response.text());
+      // Silently fail for invalid/expired keys (401/404) - user will re-authenticate
+      // Only log actual errors (server issues, network problems, etc.)
+      if (response.status !== 401 && response.status !== 403 && response.status !== 404) {
+        const errorText = await response.text();
+        console.error("Failed to refresh API key:", errorText);
+      }
       return false;
     }
     
@@ -69,7 +57,6 @@ export async function checkAndRefreshApiKey(): Promise<boolean> {
     if (data.ok && data.apiKey) {
       // Save refreshed key (even if it's the same key, expiration is extended)
       await saveApiKey(data.apiKey);
-      console.log("API key refreshed successfully, expires:", data.expiresAt);
       return true;
     }
     

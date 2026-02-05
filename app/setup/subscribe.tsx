@@ -6,7 +6,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getApiBase } from "../../lib/api";
-import { getCustomerId } from "../../lib/storage";
+import { getCustomerId, getApiKey } from "../../lib/storage";
 import { parseError } from "../../lib/errors";
 
 interface Plan {
@@ -73,14 +73,51 @@ export default function Subscribe() {
 
     setSubscribing(true);
     try {
+      // Get API key
+      const apiKey = await getApiKey();
+      if (!apiKey) {
+        throw new Error("Not authenticated. Please restart the app.");
+      }
+
+      const headers = {
+        "Content-Type": "application/json",
+        "X-Api-Key": apiKey,
+      };
+
       // Step 1: Create subscription (creates payment intent)
       const subRes = await fetch(`${getApiBase()}/api/subscriptions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ customerId, planId: plan.id }),
       });
       const subData = await subRes.json();
+      
+      // If customer already has a subscription, check if it's active
       if (!subRes.ok || !subData.ok) {
+        if (subData.error?.includes("already has an active subscription") || 
+            subData.error?.includes("has no Stripe subscription")) {
+          // Check subscription status
+          const checkRes = await fetch(`${getApiBase()}/api/customers/${customerId}/subscriptions`, { headers });
+          const checkData = await checkRes.json();
+          const activeSub = checkData.subscriptions?.find((s: any) => 
+            (s.status === "active" || s.status === "trialing") && s.stripe_subscription_id
+          );
+          
+          if (activeSub) {
+            // Already subscribed! Go to pick number
+            router.push({ pathname: "/setup/pick-number", params: { customerId, subscribed: "1" } });
+            return;
+          }
+          
+          // Incomplete subscription exists - need to delete it on backend
+          // For now, show a helpful error
+          Alert.alert(
+            "Account Issue",
+            "Your account has an incomplete subscription. Please contact support or create a new account.",
+            [{ text: "OK" }]
+          );
+          return;
+        }
         throw new Error(subData.error || "Failed to create subscription");
       }
       
@@ -89,7 +126,7 @@ export default function Subscribe() {
       // Step 2: Get payment sheet params (need to pass Stripe API version)
       const sheetRes = await fetch(`${getApiBase()}/api/subscriptions/${subscriptionId}/payment-sheet`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ apiVersion: "2023-10-16" }),
       });
       const sheetData = await sheetRes.json();
@@ -125,12 +162,22 @@ export default function Subscribe() {
       }
 
       // Step 5: Sync subscription status
-      await fetch(`${getApiBase()}/api/subscriptions/${subscriptionId}/sync`, { method: "POST" });
+      await fetch(`${getApiBase()}/api/subscriptions/${subscriptionId}/sync`, { 
+        method: "POST",
+        headers 
+      });
 
       // Success! Go to pick number
       router.push({ pathname: "/setup/pick-number", params: { customerId, subscribed: "1" } });
       
     } catch (e: any) {
+      console.error("[Subscribe] Payment error:", e);
+      console.error("[Subscribe] Error details:", {
+        message: e?.message,
+        code: e?.code,
+        stack: e?.stack
+      });
+      
       const error = parseError(e);
       
       // Show error with option to retry
@@ -234,10 +281,7 @@ export default function Subscribe() {
         {subscribing ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <>
-            <IconSymbol name="apple.logo" size={20} color="#fff" />
-            <Text style={typography.buttonText}>Subscribe with Apple Pay</Text>
-          </>
+          <Text style={typography.buttonText}>Subscribe</Text>
         )}
       </Pressable>
 

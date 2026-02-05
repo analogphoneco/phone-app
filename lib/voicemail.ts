@@ -5,8 +5,6 @@
 import { getApiBase } from "./api";
 import { getApiKey } from "./storage";
 
-const API_BASE = getApiBase();
-
 // ---- Types ----
 
 export interface Voicemail {
@@ -53,8 +51,9 @@ export async function listVoicemails(
 ): Promise<{ voicemails: Voicemail[]; newCount: number }> {
   const { limit = 50, offset = 0 } = options;
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/customers/${customerId}/voicemails?limit=${limit}&offset=${offset}`,
+    `${apiBase}/api/customers/${customerId}/voicemails?limit=${limit}&offset=${offset}`,
     { headers }
   );
   const data = await response.json();
@@ -69,8 +68,9 @@ export async function listVoicemails(
  */
 export async function getNewVoicemailCount(customerId: string): Promise<number> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/customers/${customerId}/voicemails/count`,
+    `${apiBase}/api/customers/${customerId}/voicemails/count`,
     { headers }
   );
   const data = await response.json();
@@ -85,8 +85,9 @@ export async function getNewVoicemailCount(customerId: string): Promise<number> 
  */
 export async function getVoicemail(voicemailId: string): Promise<Voicemail> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/voicemails/${voicemailId}`,
+    `${apiBase}/api/voicemails/${voicemailId}`,
     { headers }
   );
   const data = await response.json();
@@ -101,8 +102,9 @@ export async function getVoicemail(voicemailId: string): Promise<Voicemail> {
  */
 export async function markVoicemailAsListened(voicemailId: string): Promise<Voicemail> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/voicemails/${voicemailId}/listened`,
+    `${apiBase}/api/voicemails/${voicemailId}/listened`,
     { method: "POST", headers }
   );
   const data = await response.json();
@@ -117,8 +119,9 @@ export async function markVoicemailAsListened(voicemailId: string): Promise<Voic
  */
 export async function markAllVoicemailsAsListened(customerId: string): Promise<void> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/customers/${customerId}/voicemails/mark-all-listened`,
+    `${apiBase}/api/customers/${customerId}/voicemails/mark-all-listened`,
     { method: "POST", headers }
   );
   const data = await response.json();
@@ -132,8 +135,9 @@ export async function markAllVoicemailsAsListened(customerId: string): Promise<v
  */
 export async function deleteVoicemail(voicemailId: string): Promise<void> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/voicemails/${voicemailId}`,
+    `${apiBase}/api/voicemails/${voicemailId}`,
     { method: "DELETE", headers }
   );
   const data = await response.json();
@@ -148,8 +152,9 @@ export async function deleteVoicemail(voicemailId: string): Promise<void> {
  */
 export async function getVoicemailRecordingUrl(voicemailId: string): Promise<string | null> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/voicemails/${voicemailId}`,
+    `${apiBase}/api/voicemails/${voicemailId}`,
     { headers }
   );
   const data = await response.json();
@@ -164,8 +169,9 @@ export async function getVoicemailRecordingUrl(voicemailId: string): Promise<str
  */
 export async function getVoicemailGreeting(customerId: string): Promise<VoicemailGreeting> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/customers/${customerId}/voicemail-greeting`,
+    `${apiBase}/api/customers/${customerId}/voicemail-greeting`,
     { headers }
   );
   const data = await response.json();
@@ -183,8 +189,9 @@ export async function setVoicemailGreetingText(
   greetingText: string
 ): Promise<VoicemailGreeting> {
   const headers = await getHeaders();
+  const apiBase = getApiBase();
   const response = await fetch(
-    `${API_BASE}/api/customers/${customerId}/voicemail-greeting`,
+    `${apiBase}/api/customers/${customerId}/voicemail-greeting`,
     {
       method: "POST",
       headers,

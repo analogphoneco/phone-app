@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { getApiBase } from "../../lib/api";
-import { saveCredentials, saveCustomerId, saveApiKey } from "../../lib/storage";
+import { saveCredentials, saveCustomerId, saveApiKey, clearCredentials } from "../../lib/storage";
 import { useRouter, Link } from "expo-router";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
@@ -22,6 +22,24 @@ export default function CreateAccount() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  async function handleReset() {
+    Alert.alert(
+      "Reset Account",
+      "This will clear your saved account and let you start fresh. Continue?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Reset", 
+          style: "destructive",
+          onPress: async () => {
+            await clearCredentials();
+            Alert.alert("Account Reset", "You can now create a new account.");
+          }
+        }
+      ]
+    );
+  }
 
   async function handleCreate() {
     const trimmedEmail = email.trim().toLowerCase();
@@ -134,16 +152,7 @@ export default function CreateAccount() {
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Back button */}
-        <Pressable 
-          style={{ flexDirection: "row", alignItems: "center", marginBottom: 24 }}
-          onPress={() => router.back()}
-        >
-          <IconSymbol name="chevron.left" size={20} color={colors.tint} />
-          <Text style={[typography.callout, { color: colors.tint, marginLeft: 4 }]}>Back</Text>
-        </Pressable>
-
-        <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 24 }]}>
+        <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 24, marginTop: 24 }]}>
           <IconSymbol name="envelope.badge.person.crop" size={48} color={colors.tint} />
         </View>
         
@@ -210,6 +219,16 @@ export default function CreateAccount() {
             <Text style={{ color: colors.tint, textDecorationLine: "underline" }}>Privacy Policy</Text>
           </Link>
         </Text>
+
+        {/* Reset button for debugging */}
+        <Pressable 
+          style={{ marginTop: 32, padding: 12 }}
+          onPress={handleReset}
+        >
+          <Text style={[typography.caption, { color: colors.icon, textAlign: "center", textDecorationLine: "underline" }]}>
+            Reset saved account
+          </Text>
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );

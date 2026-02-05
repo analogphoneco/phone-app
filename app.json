@@ -8,7 +8,7 @@
     "scheme": "analogphone",
     "userInterfaceStyle": "automatic",
     "extra": {
-      "api": "http://192.168.50.186:4000",
+      "api": "https://analog-phone-backend-production.up.railway.app",
       "router": {},
       "eas": {
         "projectId": "942b8702-45bc-40db-94cc-9c67f608278c"
@@ -18,7 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "co.analogphone.app",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSCameraUsageDescription": "Used to scan QR codes for device setup",
         "NSContactsUsageDescription": "Used to display caller names from your contacts",

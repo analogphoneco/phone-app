@@ -9,26 +9,26 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		81D15C82B1BD49572C10635D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E657410300E7FEEFB3750153 /* PrivacyInfo.xcprivacy */; };
+		67CCB90E5BB1414BB3FFF103 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDAD79BB45F84353AEF59E41 /* noop-file.swift */; };
+		920853C0A4B13CE6912A0250 /* libPods-AnalogPhone.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 118861000BADE10EAE75DBD4 /* libPods-AnalogPhone.a */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		D5B6921DDF9B7445BBA1477E /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66D17296FFC6404B6380D71D /* ExpoModulesProvider.swift */; };
-		DD7045A63273FB07AA5EF290 /* libPods-AnalogPhone.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3335A5922339CE5C122067EC /* libPods-AnalogPhone.a */; };
-		F08159FAE6E74C6FBAD8A4C5 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01E6D0BC8EB42E0AF1B4D01 /* noop-file.swift */; };
+		BC8CC8F95CB63959B58CD1B0 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 096A368DAAC1FFD679EFCB0B /* ExpoModulesProvider.swift */; };
+		D7F014CC7770E84D46ED3040 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 964EAFCBC2F7EA6D319DA090 /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		096A368DAAC1FFD679EFCB0B /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-AnalogPhone/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		118861000BADE10EAE75DBD4 /* libPods-AnalogPhone.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AnalogPhone.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* AnalogPhone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AnalogPhone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AnalogPhone/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AnalogPhone/Info.plist; sourceTree = "<group>"; };
-		1A3C100597E23EB31A2727B0 /* Pods-AnalogPhone.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnalogPhone.debug.xcconfig"; path = "Target Support Files/Pods-AnalogPhone/Pods-AnalogPhone.debug.xcconfig"; sourceTree = "<group>"; };
-		3335A5922339CE5C122067EC /* libPods-AnalogPhone.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AnalogPhone.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		66D17296FFC6404B6380D71D /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-AnalogPhone/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		6A2A961793C7843AFCE590A6 /* Pods-AnalogPhone.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnalogPhone.release.xcconfig"; path = "Target Support Files/Pods-AnalogPhone/Pods-AnalogPhone.release.xcconfig"; sourceTree = "<group>"; };
-		A01E6D0BC8EB42E0AF1B4D01 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "AnalogPhone/noop-file.swift"; sourceTree = "<group>"; };
+		1842C146B0C625685FBDB880 /* Pods-AnalogPhone.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnalogPhone.debug.xcconfig"; path = "Target Support Files/Pods-AnalogPhone/Pods-AnalogPhone.debug.xcconfig"; sourceTree = "<group>"; };
+		964EAFCBC2F7EA6D319DA090 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = AnalogPhone/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = AnalogPhone/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		E657410300E7FEEFB3750153 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = AnalogPhone/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		BDAD79BB45F84353AEF59E41 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "AnalogPhone/noop-file.swift"; sourceTree = "<group>"; };
+		DC19EDE51AAAB3F238101DEF /* Pods-AnalogPhone.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AnalogPhone.release.xcconfig"; path = "Target Support Files/Pods-AnalogPhone/Pods-AnalogPhone.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = AnalogPhone/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* AnalogPhone-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "AnalogPhone-Bridging-Header.h"; path = "AnalogPhone/AnalogPhone-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -39,7 +39,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DD7045A63273FB07AA5EF290 /* libPods-AnalogPhone.a in Frameworks */,
+				920853C0A4B13CE6912A0250 /* libPods-AnalogPhone.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -55,8 +55,16 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				A01E6D0BC8EB42E0AF1B4D01 /* noop-file.swift */,
-				E657410300E7FEEFB3750153 /* PrivacyInfo.xcprivacy */,
+				BDAD79BB45F84353AEF59E41 /* noop-file.swift */,
+				964EAFCBC2F7EA6D319DA090 /* PrivacyInfo.xcprivacy */,
+			);
+			name = AnalogPhone;
+			sourceTree = "<group>";
+		};
+		14EBC69437C48DB2707BB845 /* AnalogPhone */ = {
+			isa = PBXGroup;
+			children = (
+				096A368DAAC1FFD679EFCB0B /* ExpoModulesProvider.swift */,
 			);
 			name = AnalogPhone;
 			sourceTree = "<group>";
@@ -65,16 +73,16 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				3335A5922339CE5C122067EC /* libPods-AnalogPhone.a */,
+				118861000BADE10EAE75DBD4 /* libPods-AnalogPhone.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		7B2E8A9D33DCE2699363111A /* Pods */ = {
+		5C3E783AD5069DF93E01A04F /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				1A3C100597E23EB31A2727B0 /* Pods-AnalogPhone.debug.xcconfig */,
-				6A2A961793C7843AFCE590A6 /* Pods-AnalogPhone.release.xcconfig */,
+				1842C146B0C625685FBDB880 /* Pods-AnalogPhone.debug.xcconfig */,
+				DC19EDE51AAAB3F238101DEF /* Pods-AnalogPhone.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
@@ -94,8 +102,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				7B2E8A9D33DCE2699363111A /* Pods */,
-				B06A0DA7A5FDB539D76ECCF1 /* ExpoModulesProviders */,
+				5C3E783AD5069DF93E01A04F /* Pods */,
+				B6E2FADC1EFDD3CBFC61CF32 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -110,10 +118,10 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		B06A0DA7A5FDB539D76ECCF1 /* ExpoModulesProviders */ = {
+		B6E2FADC1EFDD3CBFC61CF32 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				DEC7F3F81177B814257A437C /* AnalogPhone */,
+				14EBC69437C48DB2707BB845 /* AnalogPhone */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
@@ -127,14 +135,6 @@
 			path = AnalogPhone/Supporting;
 			sourceTree = "<group>";
 		};
-		DEC7F3F81177B814257A437C /* AnalogPhone */ = {
-			isa = PBXGroup;
-			children = (
-				66D17296FFC6404B6380D71D /* ExpoModulesProvider.swift */,
-			);
-			name = AnalogPhone;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -143,13 +143,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "AnalogPhone" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				BE230E5F72F2E7407F2D9BCD /* [Expo] Configure project */,
+				C9F3D868F73C8780CBA9489A /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				3F3A8CA5D8D12D289905F2CF /* [CP] Embed Pods Frameworks */,
+				D479DF933C03DAB8FC5FC117 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -199,7 +199,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				81D15C82B1BD49572C10635D /* PrivacyInfo.xcprivacy in Resources */,
+				D7F014CC7770E84D46ED3040 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,28 +243,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		3F3A8CA5D8D12D289905F2CF /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-AnalogPhone/Pods-AnalogPhone-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AnalogPhone/Pods-AnalogPhone-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
@@ -317,7 +295,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AnalogPhone/Pods-AnalogPhone-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		BE230E5F72F2E7407F2D9BCD /* [Expo] Configure project */ = {
+		C9F3D868F73C8780CBA9489A /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -341,6 +319,28 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-AnalogPhone/expo-configure-project.sh\"\n";
 		};
+		D479DF933C03DAB8FC5FC117 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-AnalogPhone/Pods-AnalogPhone-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AnalogPhone/Pods-AnalogPhone-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -349,8 +349,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				F08159FAE6E74C6FBAD8A4C5 /* noop-file.swift in Sources */,
-				D5B6921DDF9B7445BBA1477E /* ExpoModulesProvider.swift in Sources */,
+				67CCB90E5BB1414BB3FFF103 /* noop-file.swift in Sources */,
+				BC8CC8F95CB63959B58CD1B0 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -359,7 +359,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1A3C100597E23EB31A2727B0 /* Pods-AnalogPhone.debug.xcconfig */;
+			baseConfigurationReference = 1842C146B0C625685FBDB880 /* Pods-AnalogPhone.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -395,7 +395,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6A2A961793C7843AFCE590A6 /* Pods-AnalogPhone.release.xcconfig */;
+			baseConfigurationReference = DC19EDE51AAAB3F238101DEF /* Pods-AnalogPhone.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
