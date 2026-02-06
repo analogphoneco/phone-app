@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, TextInput, Keyboard } from "react-native";
+import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, Keyboard } from "react-native";
 import { getApiBase } from "../../lib/api";
 import { getCredentials, getApiKey } from "../../lib/storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { showError } from "@/lib/errors";
 
 // Format phone number to (555) 123-4567
@@ -179,38 +181,44 @@ export default function PickNumber() {
       )}
 
       <View style={[styles.center, { padding: 24, paddingTop: 16, gap: 8 }]}>
-        <IconSymbol name="phone.badge.plus" size={32} color={colors.tint} />
-        <Text style={[typography.title2, { marginTop: 8 }]}>Choose your number</Text>
-        <Text style={[typography.callout, { color: colors.icon }]}>Local phone number included in your plan</Text>
+        <View style={[styles.iconCircleLarge, { backgroundColor: colors.tint + "15" }]}>
+          <IconSymbol name="phone.fill.badge.plus" size={48} color={colors.tint} />
+        </View>
+        <Text style={[typography.title2, { marginTop: 16 }]}>Choose your number</Text>
+        <Text style={[typography.callout, { color: colors.icon, textAlign: "center" }]}>
+          Pick a local phone number from the list below
+        </Text>
       </View>
 
       {customerId && (
         <View style={{ padding: 16, paddingTop: 0, gap: 12 }}>
+          <Input
+            value={areaCode}
+            onChangeText={setAreaCode}
+            placeholder="Area code (e.g. 212)"
+            keyboardType="number-pad"
+            maxLength={3}
+            icon="magnifyingglass"
+            label="Filter by area code"
+          />
           <View style={[styles.row, { gap: 8 }]}>
-            <View style={{ flex: 1 }}>
-              <TextInput
-                style={[styles.input, typography.body]}
-                placeholder="Area code (e.g. 212)"
-                placeholderTextColor={colors.icon}
-                value={areaCode}
-                onChangeText={setAreaCode}
-                keyboardType="number-pad"
-                maxLength={3}
-              />
-            </View>
-            <Pressable 
-              style={[styles.buttonPrimary, { paddingHorizontal: 20 }]} 
+            <PrimaryButton 
+              title="Search"
               onPress={handleAreaCodeSearch}
               disabled={loading}
-            >
-              <Text style={typography.buttonText}>Search</Text>
-            </Pressable>
+              loading={loading && areaCode.length > 0}
+              icon="magnifyingglass"
+              style={{ flex: 1 }}
+            />
+            {areaCode.length > 0 && (
+              <SecondaryButton
+                title="Clear"
+                onPress={() => { setAreaCode(""); fetchNumbers(); }}
+                icon="xmark"
+                style={{ paddingHorizontal: 20 }}
+              />
+            )}
           </View>
-          {areaCode.length > 0 && (
-            <Pressable onPress={() => { setAreaCode(""); fetchNumbers(); }}>
-              <Text style={[typography.footnote, { color: colors.tint }]}>Clear search</Text>
-            </Pressable>
-          )}
         </View>
       )}
 
@@ -259,13 +267,17 @@ export default function PickNumber() {
         />
       ) : (
         <View style={[styles.center, { flex: 1, gap: 16, padding: 24 }]}>
-          <IconSymbol name="phone.down" size={40} color={colors.icon} />
+          <View style={[styles.iconCircle, { backgroundColor: colors.icon + "20" }]}>
+            <IconSymbol name="phone.down" size={40} color={colors.icon} />
+          </View>
           <Text style={[typography.callout, { color: colors.icon, textAlign: "center" }]}>
             {areaCode ? `No numbers found in area code ${areaCode}` : "No numbers available right now"}
           </Text>
-          <Pressable style={styles.buttonPrimary} onPress={() => fetchNumbers()}>
-            <Text style={typography.buttonText}>Try Again</Text>
-          </Pressable>
+          <PrimaryButton 
+            title="Try Again" 
+            onPress={() => fetchNumbers()}
+            icon="arrow.clockwise"
+          />
         </View>
       )}
     </View>
