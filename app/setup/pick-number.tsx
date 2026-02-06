@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, TextInput } from "react-native";
+import { View, Text, FlatList, Pressable, ActivityIndicator, Alert, TextInput, Keyboard } from "react-native";
 import { getApiBase } from "../../lib/api";
 import { getCredentials, getApiKey } from "../../lib/storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -91,6 +91,9 @@ export default function PickNumber() {
   }
 
   function handleAreaCodeSearch() {
+    // Dismiss keyboard when searching
+    Keyboard.dismiss();
+    
     if (areaCode.length === 3) {
       fetchNumbers(areaCode);
     } else if (areaCode.length === 0) {
