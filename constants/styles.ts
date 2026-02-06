@@ -4,7 +4,7 @@
  */
 
 import { StyleSheet, TextStyle, ViewStyle } from "react-native";
-import { Colors, Fonts } from "./theme";
+import { Colors, Fonts, Elevation, Animation } from "./theme";
 
 type ColorScheme = typeof Colors.light;
 
@@ -396,5 +396,7 @@ export function useAppStyles(colorScheme: string | null | undefined) {
     spacing: Spacing,
     radius: Radius,
     layout: Layout,
+    elevation: Elevation,
+    animation: Animation,
   };
 }

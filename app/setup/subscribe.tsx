@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useStripe } from "@stripe/stripe-react-native";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { PrimaryButton } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { getApiBase } from "../../lib/api";
 import { getCustomerId, getApiKey } from "../../lib/storage";
 import { parseError } from "../../lib/errors";
@@ -250,39 +252,64 @@ export default function Subscribe() {
         </Pressable>
 
       {/* Header */}
-      <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 24 }]}>
-        <IconSymbol name="creditcard.fill" size={48} color={colors.tint} />
+      <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 20, backgroundColor: colors.tint + "15" }]}>
+        <IconSymbol name="phone.fill" size={56} color={colors.tint} />
       </View>
       
-      <Text style={[typography.title1, { textAlign: "center", marginBottom: 8 }]}>Choose your plan</Text>
+      <Text style={[typography.title1, { textAlign: "center", marginBottom: 8 }]}>Get your phone line</Text>
       <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 32 }]}>
-        Get your own phone number with all the features you need
+        Everything you need for your vintage phone
       </Text>
 
-      {/* Plan Card */}
-      <View style={[styles.cardLarge, { marginBottom: 24 }]}>
-        {/* Plan Header */}
-        <View style={{ alignItems: "center", marginBottom: 20 }}>
-          <Text style={typography.title2}>{plan.name}</Text>
-          <View style={{ flexDirection: "row", alignItems: "baseline", marginTop: 8 }}>
-            <Text style={[typography.largeTitle, { color: colors.tint }]}>
+      {/* Plan Card - Enhanced */}
+      <View style={[styles.cardLarge, { marginBottom: 24, borderWidth: 2, borderColor: colors.tint + "20" }]}>
+        {/* Plan Header with Accent Background */}
+        <View style={{ 
+          alignItems: "center", 
+          marginBottom: 24, 
+          paddingBottom: 20,
+          borderBottomWidth: 2,
+          borderBottomColor: colors.tint + "15"
+        }}>
+          <View style={{
+            backgroundColor: colors.tint + "10",
+            paddingHorizontal: 16,
+            paddingVertical: 6,
+            borderRadius: 20,
+            marginBottom: 12
+          }}>
+            <Text style={[typography.subheadMedium, { color: colors.tint, textTransform: "uppercase", letterSpacing: 1 }]}>
+              {plan.name}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+            <Text style={[typography.largeTitle, { fontSize: 48, color: colors.tint, fontWeight: "700" }]}>
               {formatPrice(plan.priceCents)}
             </Text>
-            <Text style={[typography.callout, { color: colors.icon, marginLeft: 4 }]}>
+            <Text style={[typography.title3, { color: colors.icon, marginLeft: 6 }]}>
               /{plan.interval}
             </Text>
           </View>
+          <Text style={[typography.caption, { color: colors.icon, marginTop: 4 }]}>
+            {plan.description}
+          </Text>
         </View>
 
-        {/* Divider */}
-        <View style={{ height: 1, backgroundColor: colors.icon + "20", marginBottom: 20 }} />
-
-        {/* Features */}
-        <View style={{ gap: 12 }}>
+        {/* Features - Enhanced with better spacing */}
+        <View style={{ gap: 16 }}>
           {plan.features.map((feature, idx) => (
-            <View key={idx} style={styles.row}>
-              <IconSymbol name="checkmark.circle.fill" size={20} color={colors.success} />
-              <Text style={typography.body}>{feature}</Text>
+            <View key={idx} style={[styles.row, { gap: 12 }]}>
+              <View style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: colors.success + "20",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+                <IconSymbol name="checkmark" size={16} color={colors.success} />
+              </View>
+              <Text style={[typography.body, { flex: 1 }]}>{feature}</Text>
             </View>
           ))}
         </View>
@@ -290,57 +317,41 @@ export default function Subscribe() {
 
       {/* Promo Code Section */}
       <View style={{ marginBottom: 24 }}>
-        <Text style={[typography.subheadMedium, { marginBottom: 8 }]}>Have a promo code?</Text>
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <TextInput
-            value={promoCode}
-            onChangeText={(text) => {
-              setPromoCode(text);
-              setPromoApplied(false);
-            }}
-            placeholder="Enter code"
-            placeholderTextColor={colors.icon}
-            style={[styles.input, { flex: 1 }]}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            editable={!promoApplied}
-          />
-          {promoApplied && (
-            <View style={{ 
-              justifyContent: "center", 
-              alignItems: "center",
-              paddingHorizontal: 12,
-              backgroundColor: colors.success + "20",
-              borderRadius: 8
-            }}>
-              <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
-            </View>
-          )}
-        </View>
+        <Input
+          value={promoCode}
+          onChangeText={(text: string) => {
+            setPromoCode(text);
+            setPromoApplied(false);
+          }}
+          placeholder="Enter promo code (optional)"
+          autoCapitalize="characters"
+          autoCorrect={false}
+          editable={!promoApplied}
+          success={promoApplied}
+          label="Have a promo code?"
+          icon="ticket"
+        />
         {promoApplied && (
-          <Text style={[typography.caption, { color: colors.success, marginTop: 8 }]}>
+          <Text style={[typography.caption, { color: colors.success, marginTop: -8, marginLeft: 4 }]}>
             ✓ Promo code will be applied at checkout
           </Text>
         )}
         {promoCode.trim() && !promoApplied && (
-          <Text style={[typography.caption, { color: colors.icon, marginTop: 8 }]}>
+          <Text style={[typography.caption, { color: colors.icon, marginTop: -8, marginLeft: 4 }]}>
             Code will be validated when you subscribe
           </Text>
         )}
       </View>
 
       {/* Subscribe Button */}
-      <Pressable 
-        style={[styles.buttonPrimary, subscribing && styles.buttonDisabled]} 
+      <PrimaryButton 
+        title="Subscribe Now"
         onPress={handleSubscribe}
         disabled={subscribing}
-      >
-        {subscribing ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={typography.buttonText}>Subscribe</Text>
-        )}
-      </Pressable>
+        loading={subscribing}
+        icon="creditcard.fill"
+        fullWidth
+      />
 
       {/* Terms */}
       <Text style={[typography.caption, { color: colors.icon, textAlign: "center", marginTop: 24 }]}>
