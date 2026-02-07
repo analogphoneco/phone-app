@@ -74,13 +74,65 @@ export default function SetupComplete() {
       <View style={[styles.card, { marginBottom: 16 }]}>
         <View style={[styles.row, { marginBottom: 12 }]}>
           <View style={[styles.iconCircle, { backgroundColor: colors.accent + "20" }]}>
-            <IconSymbol name="qrcode" size={20} color={colors.accent} />
+            <IconSymbol name="bolt.fill" size={20} color={colors.accent} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={typography.bodyMedium}>Easy Setup Link</Text>
-            <Text style={[typography.caption, { color: colors.icon }]}>Copy this link to set up your device automatically</Text>
+            <Text style={typography.bodyMedium}>Easy Setup (Recommended)</Text>
+            <Text style={[typography.caption, { color: colors.icon }]}>Auto-configure your device in 2 minutes</Text>
           </View>
         </View>
+        
+        {/* Step-by-step instructions */}
+        <View style={{ gap: 12, marginBottom: 16 }}>
+          <View style={[styles.row, { alignItems: "flex-start" }]}>
+            <View style={{ backgroundColor: colors.tint, minWidth: 24, height: 24, borderRadius: 12, marginRight: 12, marginTop: 2, alignItems: "center", justifyContent: "center" }}>
+              <Text style={[typography.caption, { color: "#fff", fontWeight: "600" }]}>1</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.body, { marginBottom: 4 }]}>Find your device's IP address</Text>
+              <Text style={[typography.caption, { color: colors.icon }]}>
+                Pick up the phone and dial <Text style={{ fontFamily: "Menlo", fontWeight: "600" }}>***02</Text> — it will read out the IP address
+              </Text>
+            </View>
+          </View>
+          
+          <View style={[styles.row, { alignItems: "flex-start" }]}>
+            <View style={{ backgroundColor: colors.tint, minWidth: 24, height: 24, borderRadius: 12, marginRight: 12, marginTop: 2, alignItems: "center", justifyContent: "center" }}>
+              <Text style={[typography.caption, { color: "#fff", fontWeight: "600" }]}>2</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.body, { marginBottom: 4 }]}>Open device settings</Text>
+              <Text style={[typography.caption, { color: colors.icon }]}>
+                In your browser, go to <Text style={{ fontFamily: "Menlo" }}>http://[IP-address]</Text>
+              </Text>
+            </View>
+          </View>
+          
+          <View style={[styles.row, { alignItems: "flex-start" }]}>
+            <View style={{ backgroundColor: colors.tint, minWidth: 24, height: 24, borderRadius: 12, marginRight: 12, marginTop: 2, alignItems: "center", justifyContent: "center" }}>
+              <Text style={[typography.caption, { color: "#fff", fontWeight: "600" }]}>3</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.body, { marginBottom: 4 }]}>Login and navigate</Text>
+              <Text style={[typography.caption, { color: colors.icon }]}>
+                Login (usually admin/admin) → <Text style={{ fontWeight: "600" }}>Maintenance</Text> tab → <Text style={{ fontWeight: "600" }}>Config Server Path</Text>
+              </Text>
+            </View>
+          </View>
+          
+          <View style={[styles.row, { alignItems: "flex-start" }]}>
+            <View style={{ backgroundColor: colors.tint, minWidth: 24, height: 24, borderRadius: 12, marginRight: 12, marginTop: 2, alignItems: "center", justifyContent: "center" }}>
+              <Text style={[typography.caption, { color: "#fff", fontWeight: "600" }]}>4</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.body, { marginBottom: 4 }]}>Paste this link and provision</Text>
+              <Text style={[typography.caption, { color: colors.icon }]}>
+                Paste the link below, click <Text style={{ fontWeight: "600" }}>Provision</Text>. Device will reboot and auto-configure!
+              </Text>
+            </View>
+          </View>
+        </View>
+        
         <Pressable 
           style={[styles.cardInset, styles.row]} 
           onPress={() => copyToClipboard(provisionUrl, "url")}
