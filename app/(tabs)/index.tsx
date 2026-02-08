@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { View, Text, Pressable, RefreshControl, ScrollView, Alert } from "react-native";
 import { Link, useFocusEffect, useRouter } from "expo-router";
 import { getApiBase } from "../../lib/api";
-import { getCredentials, clearCredentials } from "../../lib/storage";
+import { getCredentials, clearCredentials, getApiKey } from "../../lib/storage";
 import { getActiveSubscription } from "../../lib/subscription";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -59,7 +59,12 @@ export default function HomeScreen() {
         setUserName(creds.userName || null);
         const url = `${getApiBase()}/api/devices/${encodeURIComponent(creds.customerId)}`;
         console.log("[Home] Fetching device from:", url);
-        const res = await fetch(url);
+        
+        // Get API key for authenticated requests
+        const apiKey = await getApiKey();
+        const headers: HeadersInit = apiKey ? { "X-Api-Key": apiKey } : {};
+        
+        const res = await fetch(url, { headers });
         console.log("[Home] Device fetch status:", res.status);
         if (res.ok) {
           const data = await res.json();

@@ -158,7 +158,10 @@ export default function CreateAccount() {
         
         <Text style={[typography.title1, { textAlign: "center", marginBottom: 8 }]}>Welcome</Text>
         <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 32 }]}>
-          Enter your email to get started
+          Enter your email to get started{"\n"}
+          <Text style={{ fontSize: 14, color: colors.icon }}>
+            Use the same email you used when ordering
+          </Text>
         </Text>
 
         <View style={{ gap: 20 }}>
@@ -219,16 +222,6 @@ export default function CreateAccount() {
             <Text style={{ color: colors.tint, textDecorationLine: "underline" }}>Privacy Policy</Text>
           </Link>
         </Text>
-
-        {/* Reset button for debugging */}
-        <Pressable 
-          style={{ marginTop: 32, padding: 12 }}
-          onPress={handleReset}
-        >
-          <Text style={[typography.caption, { color: colors.icon, textAlign: "center", textDecorationLine: "underline" }]}>
-            Reset saved account
-          </Text>
-        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
