@@ -268,13 +268,33 @@ export default function HomeScreen() {
             Get Started
           </Text>
           <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 24, lineHeight: 22 }]}>
-            Set up your Analog phone line to start making calls
+            {customerId ? "Activate your device or buy hardware to get started" : "Set up your Analog phone line to start making calls"}
           </Text>
           {hasStaleCreds ? (
             <Pressable style={styles.buttonPrimary} onPress={handleStartFresh}>
               <Text style={typography.buttonText}>Start Fresh</Text>
               <IconSymbol name="arrow.right" size={18} color="#fff" />
             </Pressable>
+          ) : customerId ? (
+            <View style={{ gap: 12, width: '100%' }}>
+              <Link href="/setup/activate" asChild>
+                <Pressable style={styles.buttonPrimary}>
+                  <Text style={typography.buttonText}>Enter Activation Code</Text>
+                  <IconSymbol name="arrow.right" size={18} color="#fff" />
+                </Pressable>
+              </Link>
+              <Pressable 
+                style={styles.buttonSecondary}
+                onPress={() => {
+                  // TODO: Link to Shopify store
+                  Alert.alert('Shop Hardware', 'Visit our online store to purchase hardware', [
+                    { text: 'OK' }
+                  ]);
+                }}
+              >
+                <Text style={[typography.buttonText, { color: colors.tint }]}>Buy Hardware</Text>
+              </Pressable>
+            </View>
           ) : (
             <Link href="/setup" asChild>
               <Pressable style={styles.buttonPrimary}>
@@ -283,6 +303,112 @@ export default function HomeScreen() {
               </Pressable>
             </Link>
           )}
+        </View>
+      )}
+
+      {isSetupComplete && (
+        <View style={styles.section}>
+          <View style={styles.sectionTitleContainer}>
+            <Text style={typography.sectionHeader}>Device Status</Text>
+          </View>
+          <View style={styles.card}>
+            {/* Activation Status */}
+            <View style={[styles.rowSpaced, { marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.icon + "10" }]}>
+              <View style={[styles.row, { gap: 12 }]}>
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: colors.success + "15",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <IconSymbol name="checkmark.seal.fill" size={22} color={colors.success} />
+                </View>
+                <View>
+                  <Text style={typography.bodyMedium}>Hardware Activated</Text>
+                  <Text style={[typography.caption, { color: colors.icon }]}>
+                    Device linked to account
+                  </Text>
+                </View>
+              </View>
+              <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
+            </View>
+
+            {/* Subscription Status */}
+            {subscriptionId ? (
+              <View style={[styles.rowSpaced, { marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.icon + "10" }]}>
+                <View style={[styles.row, { gap: 12 }]}>
+                  <View style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: colors.success + "15",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <IconSymbol name="dollarsign.circle.fill" size={22} color={colors.success} />
+                  </View>
+                  <View>
+                    <Text style={typography.bodyMedium}>Service Active</Text>
+                    <Text style={[typography.caption, { color: colors.icon }]}>
+                      Subscription is active
+                    </Text>
+                  </View>
+                </View>
+                <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
+              </View>
+            ) : (
+              <View style={[styles.rowSpaced, { marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.icon + "10" }]}>
+                <View style={[styles.row, { gap: 12 }]}>
+                  <View style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: colors.warning + "15",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}>
+                    <IconSymbol name="exclamationmark.circle.fill" size={22} color={colors.warning} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={typography.bodyMedium}>No Active Subscription</Text>
+                    <Text style={[typography.caption, { color: colors.icon }]}>
+                      Subscribe to start making calls
+                    </Text>
+                  </View>
+                </View>
+                <Link href="/(tabs)/subscription" asChild>
+                  <Pressable>
+                    <IconSymbol name="arrow.right.circle.fill" size={24} color={colors.tint} />
+                  </Pressable>
+                </Link>
+              </View>
+            )}
+
+            {/* SIP Credentials Status */}
+            <View style={styles.row}>
+              <View style={[styles.row, { gap: 12, flex: 1 }]}>
+                <View style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: colors.tint + "15",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                  <IconSymbol name="antenna.radiowaves.left.and.right" size={22} color={colors.tint} />
+                </View>
+                <View>
+                  <Text style={typography.bodyMedium}>SIP Ready</Text>
+                  <Text style={[typography.caption, { color: colors.icon }]}>
+                    {device.user_name || "Credentials configured"}
+                  </Text>
+                </View>
+              </View>
+              <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
+            </View>
+          </View>
         </View>
       )}
 

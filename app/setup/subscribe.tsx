@@ -35,6 +35,7 @@ export default function Subscribe() {
   const [promoCode, setPromoCode] = useState("");
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [promoApplied, setPromoApplied] = useState(false);
+  const [deviceInfo, setDeviceInfo] = useState<any>(null);
 
   useEffect(() => {
     loadData();
@@ -47,6 +48,21 @@ export default function Subscribe() {
       const storedCustomer = await getCustomerId();
       const custId = paramCustomer || storedCustomer;
       setCustomerId(custId);
+
+      // Get activated device info
+      if (custId) {
+        try {
+          const deviceRes = await fetch(`${getApiBase()}/api/customer/${custId}/device`);
+          if (deviceRes.ok) {
+            const deviceData = await deviceRes.json();
+            if (deviceData.device) {
+              setDeviceInfo(deviceData.device);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to load device info:", e);
+        }
+      }
 
       // Load plans (we only have one)
       const res = await fetch(`${getApiBase()}/api/plans`);
@@ -96,7 +112,8 @@ export default function Subscribe() {
         body: JSON.stringify({ 
           customerId, 
           planId: plan.id,
-          ...(promoCode.trim() ? { promoCode: promoCode.trim() } : {})
+          ...(promoCode.trim() ? { promoCode: promoCode.trim() } : {}),
+          ...(deviceInfo?.phoneNumber ? { phoneNumber: deviceInfo.phoneNumber } : {})
         }),
       });
       const subData = await subRes.json();
@@ -113,8 +130,8 @@ export default function Subscribe() {
           );
           
           if (activeSub) {
-            // Already subscribed! Go to pick number
-            router.push({ pathname: "/setup/pick-number", params: { customerId, subscribed: "1" } });
+            // Already subscribed! Go to main app
+            router.replace("/(tabs)");
             return;
           }
           
@@ -176,8 +193,19 @@ export default function Subscribe() {
         headers 
       });
 
-      // Success! Go to pick number
-      router.push({ pathname: "/setup/pick-number", params: { customerId, subscribed: "1" } });
+      // Success! Show confirmation and go to main app
+      Alert.alert(
+        'Subscription Active! 🎉',
+        deviceInfo?.phoneNumber 
+          ? `Your phone line ${deviceInfo.phoneNumber} is now active and ready to use!`
+          : 'Your subscription is active!',
+        [
+          {
+            text: 'Start Using Phone',
+            onPress: () => router.replace("/(tabs)"),
+          },
+        ]
+      );
       
     } catch (e: any) {
       console.error("[Subscribe] Payment error:", e);
@@ -256,9 +284,36 @@ export default function Subscribe() {
         <IconSymbol name="phone.fill" size={56} color={colors.tint} />
       </View>
       
-      <Text style={[typography.title1, { textAlign: "center", marginBottom: 8 }]}>Get your phone line</Text>
+      {/* Show device info if activated */}
+      {deviceInfo && (
+        <View style={{
+          backgroundColor: colors.success + "15",
+          borderLeftWidth: 4,
+          borderLeftColor: colors.success,
+          padding: 16,
+          borderRadius: 8,
+          marginBottom: 24,
+        }}>
+          <View style={[styles.row, { marginBottom: 4 }]}>
+            <IconSymbol name="checkmark.circle.fill" size={20} color={colors.success} />
+            <Text style={[typography.subheadMedium, { color: colors.success, marginLeft: 8 }]}>
+              Device Activated
+            </Text>
+          </View>
+          <Text style={[typography.body, { color: colors.text }]}>
+            Your phone number: <Text style={{ fontWeight: '600' }}>{deviceInfo.phoneNumber}</Text>
+          </Text>
+          <Text style={[typography.caption, { color: colors.icon, marginTop: 4 }]}>
+            Subscribe now to start making calls
+          </Text>
+        </View>
+      )}
+      
+      <Text style={[typography.title1, { textAlign: "center", marginBottom: 8 }]}>
+        {deviceInfo ? "Activate Your Service" : "Get your phone line"}
+      </Text>
       <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 32 }]}>
-        Everything you need for your vintage phone
+        {deviceInfo ? "Choose a plan to start making calls" : "Everything you need for your vintage phone"}
       </Text>
 
       {/* Plan Card - Enhanced */}
