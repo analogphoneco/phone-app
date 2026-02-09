@@ -130,13 +130,24 @@ export default function CreateAccount() {
               [{ text: "OK", onPress: () => router.replace("/(tabs)") }]
             );
             return;
+          } else {
+            // Returning user but no active subscription - show helpful message
+            Alert.alert(
+              "Welcome back!",
+              "We found your account. You'll need to set up a subscription to continue.",
+              [{ text: "Continue", onPress: () => router.push({ pathname: "/setup/subscribe", params: { customerId } }) }]
+            );
+            return;
           }
         } catch (e) {
           console.warn("Failed to check subscription:", e);
+          // On error, proceed to subscription page
+          router.push({ pathname: "/setup/subscribe", params: { customerId } });
+          return;
         }
       }
 
-      // New user or returning user without subscription - go to subscribe
+      // New user - go to subscribe
       router.push({ pathname: "/setup/subscribe", params: { customerId } });
     } catch (e: any) {
       if (e?.name === "AbortError") {

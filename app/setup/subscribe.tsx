@@ -310,10 +310,15 @@ export default function Subscribe() {
       )}
       
       <Text style={[typography.title1, { textAlign: "center", marginBottom: 8 }]}>
-        {deviceInfo ? "Activate Your Service" : "Get your phone line"}
+        {deviceInfo ? "Activate Your Service" : "Choose Your Plan"}
       </Text>
-      <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 32 }]}>
-        {deviceInfo ? "Choose a plan to start making calls" : "Everything you need for your vintage phone"}
+      <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 16 }]}>
+        {deviceInfo ? "Subscribe to start making calls" : "Select a subscription to get started"}
+      </Text>
+      <Text style={[typography.footnote, { color: colors.icon, textAlign: "center", marginBottom: 32, fontStyle: "italic" }]}>
+        {deviceInfo 
+          ? "💡 If you already subscribed, you won't be charged again" 
+          : "💡 Already subscribed? Log in with your email to restore your account"}
       </Text>
 
       {/* Plan Card - Enhanced */}
