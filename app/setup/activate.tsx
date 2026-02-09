@@ -20,7 +20,9 @@ export default function ActivateScreen() {
   const router = useRouter();
   
   const [code, setCode] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [useEmailActivation, setUseEmailActivation] = useState(false);
 
   const formatActivationCode = (text: string) => {
     // Format as: AP-XXXX-XXXXXX
@@ -31,31 +33,40 @@ export default function ActivateScreen() {
   };
 
   const handleActivate = async () => {
-    if (!code || code.length < 10) {
-      Alert.alert('Invalid Code', 'Please enter a valid activation code');
-      return;
+    // Validate input based on activation method
+    if (useEmailActivation) {
+      if (!email || !email.includes('@')) {
+        Alert.alert('Invalid Email', 'Please enter a valid email address');
+        return;
+      }
+    } else {
+      if (!code || code.length < 10) {
+        Alert.alert('Invalid Code', 'Please enter a valid activation code');
+        return;
+      }
     }
 
     setLoading(true);
 
     try {
-      // Get customer ID from storage (or generate if first time)
-      const { getCredentials } = await import('../../lib/storage');
-      let creds = await getCredentials();
+      // Get customer ID from storage
+      const { getCredentials, getCustomerId } = await import('../../lib/storage');
+      const customerId = await getCustomerId();
       
-      if (!creds?.customerId) {
-        // Generate a customer ID if they don't have one yet
-        const newCustomerId = `app_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        creds = { customerId: newCustomerId, userName: 'User' };
+      if (!customerId) {
+        throw new Error('Not logged in. Please create an account first.');
       }
 
-      const response = await fetch(`${getApiBase()}/api/activate`, {
+      // Use email-based activation if email provided
+      const endpoint = useEmailActivation ? '/api/activate-by-email' : '/api/activate';
+      const body = useEmailActivation 
+        ? { email: email.toLowerCase().trim(), customerId }
+        : { activationCode: code.replace(/[^A-Z0-9]/g, ''), customerId };
+
+      const response = await fetch(`${getApiBase()}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          activationCode: code.replace(/[^A-Z0-9]/g, ''),
-          customerId: creds.customerId,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -64,31 +75,13 @@ export default function ActivateScreen() {
         throw new Error(data.error || 'Activation failed');
       }
 
-      // Save expanded credentials - the storage expects customerId and userName
-      // We'll store everything else in a separate key or extend the interface
-      await saveCredentials({
-        customerId: creds.customerId,
-        userName: creds.userName || 'User',
-      });
-      
-      // Store device details separately for now
-      const SecureStore = await import('expo-secure-store');
-      await SecureStore.setItemAsync('phone_device', JSON.stringify({
-        sipUsername: data.device.sipUsername,
-        sipPassword: data.device.sipPassword,
-        phoneNumber: data.device.phoneNumber,
-        activationCode: code,
-        activated: true,
-        activatedAt: data.device.activatedAt,
-      }));
-
       Alert.alert(
         'Device Activated! 🎉',
-        `Your phone number: ${data.device.phoneNumber}\n\nNext: Choose a service plan to start making calls.`,
+        `Your phone number: ${data.device.phoneNumber}\n\nYou're all set!`,
         [
           {
-            text: 'Choose Plan',
-            onPress: () => router.replace('/setup/subscribe'),
+            text: 'Go to Home',
+            onPress: () => router.replace('/(tabs)'),
           },
         ]
       );
@@ -96,7 +89,7 @@ export default function ActivateScreen() {
       console.error('Activation error:', error);
       Alert.alert(
         'Activation Failed',
-        error.message || 'Could not activate device. Please check your code and try again.',
+        error.message || 'Could not activate device. Please check your information and try again.',
         [{ text: 'OK' }]
       );
     } finally {
@@ -115,7 +108,7 @@ export default function ActivateScreen() {
       >
         <View style={{ flex: 1, padding: 24, justifyContent: 'center' }}>
           {/* Header */}
-          <View style={{ alignItems: 'center', marginBottom: 48 }}>
+          <View style={{ alignItems: 'center', marginBottom: 32 }}>
             <View
               style={{
                 width: 80,
@@ -133,45 +126,102 @@ export default function ActivateScreen() {
               Activate Your Device
             </Text>
             <Text style={[typography.body, { textAlign: 'center', color: colors.icon }]}>
-              Enter the activation code from your hardware package
+              {useEmailActivation 
+                ? 'Use the same email from your order' 
+                : 'Enter the activation code from your hardware package'}
             </Text>
           </View>
 
-          {/* Code Input */}
-          <View style={{ marginBottom: 24 }}>
-            <Text style={[typography.sectionHeader, { marginBottom: 8 }]}>Activation Code</Text>
-            <TextInput
-              value={code}
-              onChangeText={(text) => setCode(formatActivationCode(text))}
-              placeholder="AP-1234-ABC123"
-              placeholderTextColor={colors.icon}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              maxLength={14} // AP-XXXX-XXXXXX
+          {/* Toggle between email and code */}
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 24 }}>
+            <Pressable
+              onPress={() => setUseEmailActivation(false)}
               style={[
-                styles.input,
                 {
-                  fontSize: 18,
-                  fontWeight: '600',
-                  letterSpacing: 2,
-                  textAlign: 'center',
-                  fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+                  flex: 1,
+                  padding: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  backgroundColor: !useEmailActivation ? colors.tint : colors.cardBackground,
                 },
               ]}
-            />
-            <Text style={[typography.caption, { marginTop: 8, color: colors.icon }]}>
-              Format: AP-XXXX-XXXXXX
-            </Text>
+            >
+              <Text style={[typography.subheadMedium, { color: !useEmailActivation ? '#fff' : colors.text }]}>
+                Use Code
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setUseEmailActivation(true)}
+              style={[
+                {
+                  flex: 1,
+                  padding: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                  backgroundColor: useEmailActivation ? colors.tint : colors.cardBackground,
+                },
+              ]}
+            >
+              <Text style={[typography.subheadMedium, { color: useEmailActivation ? '#fff' : colors.text }]}>
+                Use Email
+              </Text>
+            </Pressable>
           </View>
+
+          {/* Code or Email Input */}
+          {useEmailActivation ? (
+            <View style={{ marginBottom: 24 }}>
+              <Text style={[typography.sectionHeader, { marginBottom: 8 }]}>Order Email</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="email@example.com"
+                placeholderTextColor={colors.icon}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={[styles.input, { fontSize: 16 }]}
+              />
+              <Text style={[typography.caption, { marginTop: 8, color: colors.icon }]}>
+                Use the same email you used when ordering your hardware
+              </Text>
+            </View>
+          ) : (
+            <View style={{ marginBottom: 24 }}>
+              <Text style={[typography.sectionHeader, { marginBottom: 8 }]}>Activation Code</Text>
+              <TextInput
+                value={code}
+                onChangeText={(text) => setCode(formatActivationCode(text))}
+                placeholder="AP-1234-ABC123"
+                placeholderTextColor={colors.icon}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                maxLength={14} // AP-XXXX-XXXXXX
+                style={[
+                  styles.input,
+                  {
+                    fontSize: 18,
+                    fontWeight: '600',
+                    letterSpacing: 2,
+                    textAlign: 'center',
+                    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+                  },
+                ]}
+              />
+              <Text style={[typography.caption, { marginTop: 8, color: colors.icon }]}>
+                Format: AP-XXXX-XXXXXX
+              </Text>
+            </View>
+          )}
 
           {/* Activate Button */}
           <Pressable
             onPress={handleActivate}
-            disabled={loading || code.length < 10}
+            disabled={loading || (useEmailActivation ? !email : code.length < 10)}
             style={({ pressed }) => [
               styles.buttonPrimary,
               {
-                opacity: pressed ? 0.8 : loading || code.length < 10 ? 0.5 : 1,
+                opacity: pressed ? 0.8 : loading || (useEmailActivation ? !email : code.length < 10) ? 0.5 : 1,
               },
             ]}
           >

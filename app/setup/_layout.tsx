@@ -23,6 +23,7 @@ export default function SetupLayout() {
     >
       <Stack.Screen name="index" options={{ title: "Setup" }} />
       <Stack.Screen name="create-account" options={{ title: "Sign Up" }} />
+      <Stack.Screen name="activate" options={{ title: "Activate Device" }} />
       <Stack.Screen name="subscribe" options={{ title: "Subscribe" }} />
       <Stack.Screen name="pick-number" options={{ title: "Choose Number" }} />
       <Stack.Screen name="complete" options={{ title: "Setup Complete", headerBackVisible: false }} />
