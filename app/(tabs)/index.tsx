@@ -275,12 +275,7 @@ export default function HomeScreen() {
           <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 24, lineHeight: 22 }]}>
             {customerId ? "Activate your device or buy hardware to get started" : "Set up your Analog phone line to start making calls"}
           </Text>
-          {hasStaleCreds ? (
-            <Pressable style={styles.buttonPrimary} onPress={handleStartFresh}>
-              <Text style={typography.buttonText}>Start Fresh</Text>
-              <IconSymbol name="arrow.right" size={18} color="#fff" />
-            </Pressable>
-          ) : customerId ? (
+          {customerId ? (
             <View style={{ gap: 12, width: '100%' }}>
               <Link href="/setup/activate" asChild>
                 <Pressable style={styles.buttonPrimary}>
@@ -299,6 +294,14 @@ export default function HomeScreen() {
               >
                 <Text style={[typography.buttonText, { color: colors.tint }]}>Buy Hardware</Text>
               </Pressable>
+              {hasStaleCreds && (
+                <Pressable 
+                  style={[styles.buttonSecondary, { borderColor: colors.icon + '30' }]}
+                  onPress={handleStartFresh}
+                >
+                  <Text style={[typography.footnote, { color: colors.icon }]}>Start Fresh</Text>
+                </Pressable>
+              )}
             </View>
           ) : (
             <Link href="/setup" asChild>
