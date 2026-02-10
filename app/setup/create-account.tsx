@@ -112,6 +112,29 @@ export default function CreateAccount() {
         await saveApiKey(data.customer.apiKey);
       }
 
+      // Try to auto-activate if there's a device for this email
+      try {
+        const activateRes = await fetch(`${getApiBase()}/api/activate-by-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: trimmedEmail, customerId }),
+        });
+        const activateData = await activateRes.json();
+        
+        if (activateRes.ok && activateData.ok) {
+          // Device auto-activated!
+          Alert.alert(
+            "Phone Activated! 🎉",
+            `Your phone number ${activateData.device?.phoneNumber || ''} has been automatically activated!\n\nYou're all set!`,
+            [{ text: "Go to Home", onPress: () => router.replace("/(tabs)") }]
+          );
+          return;
+        }
+      } catch (e) {
+        // Auto-activation failed, continue with normal flow
+        console.log('Auto-activation not available:', e);
+      }
+
       // Check if this is a returning user with an existing subscription
       if (data.existing) {
         // Returning user - just go to home
