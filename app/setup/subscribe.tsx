@@ -263,12 +263,13 @@ export default function Subscribe() {
     <KeyboardAvoidingView 
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
       <ScrollView 
         style={styles.screen} 
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
       >
       {/* Header */}
       <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 20, backgroundColor: colors.tint + "15" }]}>

@@ -138,8 +138,16 @@ export default function CreateAccount() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView 
+      style={styles.screen} 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    >
+      <ScrollView 
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 }]} 
+        keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets={true}
+      >
         <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 24, marginTop: 24 }]}>
           <IconSymbol name="envelope.badge.person.crop" size={48} color={colors.tint} />
         </View>
