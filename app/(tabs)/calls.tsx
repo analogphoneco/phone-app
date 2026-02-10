@@ -114,7 +114,10 @@ export default function CallsScreen() {
       }
       
       setCustomerId(cid);
-      const res = await fetch(`${getApiBase()}/api/calls/${encodeURIComponent(cid)}`);
+      
+      const apiKey = await getApiKey();
+      const headers: HeadersInit = apiKey ? { "X-Api-Key": apiKey } : {};
+      const res = await fetch(`${getApiBase()}/api/calls/${encodeURIComponent(cid)}`, { headers });
       
       if (!res.ok) {
         throw new Error(`Server returned ${res.status}`);
