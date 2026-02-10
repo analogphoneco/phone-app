@@ -114,37 +114,14 @@ export default function CreateAccount() {
 
       // Check if this is a returning user with an existing subscription
       if (data.existing) {
-        // Check for active subscription
-        try {
-          const subRes = await fetch(`${getApiBase()}/api/customers/${customerId}/subscriptions`);
-          const subData = await subRes.json();
-          const activeSub = subData.subscriptions?.find((s: any) => 
-            s.status === "active" || s.status === "trialing"
-          );
-          
-          if (activeSub) {
-            // Returning user with active subscription - go home
-            Alert.alert(
-              "Welcome back!", 
-              "Your account has been restored.",
-              [{ text: "OK", onPress: () => router.replace("/(tabs)") }]
-            );
-            return;
-          } else {
-            // Returning user but no active subscription - show helpful message
-            Alert.alert(
-              "Welcome back!",
-              "We found your account. You'll need to set up a subscription to continue.",
-              [{ text: "Continue", onPress: () => router.push({ pathname: "/setup/subscribe", params: { customerId } }) }]
-            );
-            return;
-          }
-        } catch (e) {
-          console.warn("Failed to check subscription:", e);
-          // On error, proceed to subscription page
-          router.push({ pathname: "/setup/subscribe", params: { customerId } });
-          return;
-        }
+        // Returning user - just go to home
+        // The subscribe page will check for existing subscriptions and redirect if needed
+        Alert.alert(
+          "Welcome back!", 
+          "Your account has been restored.",
+          [{ text: "OK", onPress: () => router.replace("/(tabs)") }]
+        );
+        return;
       }
 
       // New user - go to subscribe
