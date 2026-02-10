@@ -273,7 +273,7 @@ export default function HomeScreen() {
             Get Started
           </Text>
           <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 24, lineHeight: 22 }]}>
-            {customerId ? "Activate your device or buy hardware to get started" : "Set up your Analog phone line to start making calls"}
+            {customerId ? "Activate your device or buy hardware to get started" : "Sign in with your order email to activate your phone"}
           </Text>
           {customerId ? (
             <View style={{ gap: 12, width: '100%' }}>
@@ -304,12 +304,24 @@ export default function HomeScreen() {
               )}
             </View>
           ) : (
-            <Link href="/setup" asChild>
-              <Pressable style={styles.buttonPrimary}>
-                <Text style={typography.buttonText}>Set Up Phone</Text>
-                <IconSymbol name="arrow.right" size={18} color="#fff" />
+            <View style={{ gap: 12, width: '100%' }}>
+              <Link href="/setup/create-account" asChild>
+                <Pressable style={styles.buttonPrimary}>
+                  <Text style={typography.buttonText}>Sign In / Create Account</Text>
+                  <IconSymbol name="arrow.right" size={18} color="#fff" />
+                </Pressable>
+              </Link>
+              <Pressable 
+                style={styles.buttonSecondary}
+                onPress={() => {
+                  Alert.alert('New Customer?', 'Purchase hardware from our online store, then sign in with your order email to activate.', [
+                    { text: 'OK' }
+                  ]);
+                }}
+              >
+                <Text style={[typography.buttonText, { color: colors.tint }]}>Buy Hardware</Text>
               </Pressable>
-            </Link>
+            </View>
           )}
         </View>
       )}
