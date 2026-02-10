@@ -270,15 +270,6 @@ export default function Subscribe() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Back button */}
-        <Pressable 
-          style={{ flexDirection: "row", alignItems: "center", marginBottom: 24 }}
-          onPress={() => router.back()}
-        >
-          <IconSymbol name="chevron.left" size={20} color={colors.tint} />
-          <Text style={[typography.callout, { color: colors.tint, marginLeft: 4 }]}>Back</Text>
-        </Pressable>
-
       {/* Header */}
       <View style={[styles.iconCircleLarge, { alignSelf: "center", marginBottom: 20, backgroundColor: colors.tint + "15" }]}>
         <IconSymbol name="phone.fill" size={56} color={colors.tint} />
