@@ -21,12 +21,13 @@ export class WiFiDetection {
    * Get the configured home WiFi SSID
    */
   static async getHomeNetwork(): Promise<string | null> {
-    if (this.homeSSID) {
-      console.log('[WiFiDetection] Returning cached SSID:', this.homeSSID);
-      return this.homeSSID;
-    }
-    this.homeSSID = await AsyncStorage.getItem(HOME_WIFI_KEY);
-    console.log('[WiFiDetection] Loaded from AsyncStorage:', this.homeSSID);
+    // Always read from AsyncStorage to ensure we have the latest value
+    const stored = await AsyncStorage.getItem(HOME_WIFI_KEY);
+    console.log('[WiFiDetection] Read from AsyncStorage:', stored);
+    
+    // Update cache
+    this.homeSSID = stored;
+    
     return this.homeSSID;
   }
 

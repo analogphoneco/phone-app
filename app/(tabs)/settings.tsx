@@ -199,22 +199,28 @@ export default function SettingsScreen() {
     console.log('[configureHomeWiFi] Saved network:', network);
     if (network) {
       // Ensure save completes and cache is set
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // Double-check the value was saved by reading it back
       const savedSSID = await WiFiDetection.getHomeNetwork();
       console.log('[configureHomeWiFi] Verified saved SSID:', savedSSID);
       
-      // Update state
-      setHomeWiFiConfigured(!!savedSSID);
+      // Force update the state AFTER verification
+      const isConfigured = !!savedSSID;
+      console.log('[configureHomeWiFi] Setting homeWiFiConfigured to:', isConfigured);
+      setHomeWiFiConfigured(isConfigured);
       if (network.ssid) {
         setCurrentNetwork(network.ssid);
       }
       
+      // Also update the call bridge status
+      const status = await CallBridgeService.getStatus();
+      console.log('[configureHomeWiFi] Call bridge status:', status);
+      setCallBridgeStatus(status);
+      
       Alert.alert(
         'Home Network Configured',
-        `Your home WiFi "${network.ssid || 'Unknown'}" has been saved. Your analog phone will now ring when you receive calls at home.`,
-        [{ text: 'OK' }]
+        `Your home WiFi "${network.ssid || 'Unknown'}" has been saved. Your analog phone will now ring when you receive calls at home.`
       );
     } else {
       Alert.alert(
