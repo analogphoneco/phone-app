@@ -11,16 +11,22 @@ export class WiFiDetection {
    * Set the home WiFi network SSID
    */
   static async setHomeNetwork(ssid: string) {
+    console.log('[WiFiDetection] Setting home network:', ssid);
     this.homeSSID = ssid;
     await AsyncStorage.setItem(HOME_WIFI_KEY, ssid);
+    console.log('[WiFiDetection] Saved to AsyncStorage');
   }
 
   /**
    * Get the configured home WiFi SSID
    */
   static async getHomeNetwork(): Promise<string | null> {
-    if (this.homeSSID) return this.homeSSID;
+    if (this.homeSSID) {
+      console.log('[WiFiDetection] Returning cached SSID:', this.homeSSID);
+      return this.homeSSID;
+    }
     this.homeSSID = await AsyncStorage.getItem(HOME_WIFI_KEY);
+    console.log('[WiFiDetection] Loaded from AsyncStorage:', this.homeSSID);
     return this.homeSSID;
   }
 

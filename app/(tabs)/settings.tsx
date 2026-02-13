@@ -181,6 +181,7 @@ export default function SettingsScreen() {
   // Check call bridge configuration status
   const checkCallBridgeStatus = async () => {
     const homeSSID = await WiFiDetection.getHomeNetwork();
+    console.log('[checkCallBridgeStatus] homeSSID:', homeSSID, 'configured:', !!homeSSID);
     setHomeWiFiConfigured(!!homeSSID);
     
     const netInfo = await NetInfo.fetch();
@@ -193,13 +194,16 @@ export default function SettingsScreen() {
   };
 
   const configureHomeWiFi = async () => {
+    console.log('[configureHomeWiFi] Starting...');
     const network = await WiFiDetection.detectAndSaveHomeNetwork();
+    console.log('[configureHomeWiFi] Saved network:', network);
     if (network) {
       // Ensure save completes and cache is set
       await new Promise(resolve => setTimeout(resolve, 100));
       
       // Double-check the value was saved by reading it back
       const savedSSID = await WiFiDetection.getHomeNetwork();
+      console.log('[configureHomeWiFi] Verified saved SSID:', savedSSID);
       
       // Update state
       setHomeWiFiConfigured(!!savedSSID);
@@ -602,24 +606,12 @@ export default function SettingsScreen() {
           <Text style={typography.sectionHeader}>Actions</Text>
         </View>
         <View style={styles.card}>
-          <Pressable style={[styles.row, { paddingVertical: 8 }]} onPress={loadData}>
-            <IconSymbol name="arrow.clockwise" size={20} color={colors.tint} />
-            <Text style={[typography.callout, { marginLeft: 12, color: colors.tint }]}>Refresh Data</Text>
-          </Pressable>
           {customerId && (
-            <>
-              <View style={styles.divider} />
-              <Pressable style={[styles.row, { paddingVertical: 8 }]} onPress={handleSignOut}>
-                <IconSymbol name="rectangle.portrait.and.arrow.right" size={20} color={colors.error} />
-                <Text style={[typography.callout, { marginLeft: 12, color: colors.error }]}>Sign Out</Text>
-              </Pressable>
-            </>
+            <Pressable style={[styles.row, { paddingVertical: 8 }]} onPress={handleSignOut}>
+              <IconSymbol name="rectangle.portrait.and.arrow.right" size={20} color={colors.error} />
+              <Text style={[typography.callout, { marginLeft: 12, color: colors.error }]}>Sign Out</Text>
+            </Pressable>
           )}
-          <View style={styles.divider} />
-          <Pressable style={[styles.row, { paddingVertical: 8 }]} onPress={handleResetForTesting}>
-            <IconSymbol name="arrow.counterclockwise" size={20} color={colors.icon} />
-            <Text style={[typography.callout, { marginLeft: 12, color: colors.icon }]}>Reset for Testing</Text>
-          </Pressable>
         </View>
       </View>
 
