@@ -8,6 +8,10 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import Constants from "expo-constants";
 import { getActiveSubscription, getBillingPortalUrl } from "@/lib/subscription";
+import { WiFiDetection } from "@/lib/wifi-detection";
+import { VoIPNotifications } from "@/lib/voip-notifications";
+import { CallBridgeService } from "@/lib/call-bridge-service";
+import NetInfo from '@react-native-community/netinfo';
 
 interface DeviceInfo {
   user_name?: string;
@@ -48,6 +52,9 @@ export default function SettingsScreen() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus | null>(null);
   const [paymentFailures, setPaymentFailures] = useState<any[]>([]);
+  const [homeWiFiConfigured, setHomeWiFiConfigured] = useState(false);
+  const [currentNetwork, setCurrentNetwork] = useState<string>('');
+  const [callBridgeStatus, setCallBridgeStatus] = useState<any>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -167,8 +174,69 @@ export default function SettingsScreen() {
     useCallback(() => {
       setLoading(true);
       loadData();
+      checkCallBridgeStatus();
     }, [loadData])
   );
+
+  // Check call bridge configuration status
+  const checkCallBridgeStatus = async () => {
+    const homeSSID = await WiFiDetection.getHomeNetwork();
+    setHomeWiFiConfigured(!!homeSSID);
+    
+    const netInfo = await NetInfo.fetch();
+    if (netInfo.type === 'wifi' && (netInfo.details as any)?.ssid) {
+      setCurrentNetwork((netInfo.details as any).ssid);
+    }
+
+    const status = await CallBridgeService.getStatus();
+    setCallBridgeStatus(status);
+  };
+
+  const configureHomeWiFi = async () => {
+    const network = await WiFiDetection.detectAndSaveHomeNetwork();
+    if (network) {
+      // Immediately update state
+      setHomeWiFiConfigured(true);
+      if (network.ssid) {
+        setCurrentNetwork(network.ssid);
+      }
+      
+      Alert.alert(
+        'Home Network Configured',
+        `Your home WiFi "${network.ssid || 'Unknown'}" has been saved. Your analog phone will now ring when you receive calls at home.`,
+        [{ text: 'OK', onPress: async () => {
+          await checkCallBridgeStatus();
+        }}]
+      );
+    } else {
+      Alert.alert(
+        'Not on WiFi',
+        'Please connect to your home WiFi network first, then try again.'
+      );
+    }
+  };
+
+  const enableCallBridging = async () => {
+    // Register for push notifications
+    const token = await VoIPNotifications.register();
+    
+    if (token) {
+      await checkCallBridgeStatus();
+      Alert.alert(
+        'Call Bridging Enabled',
+        'Your analog phone will now ring when you receive calls at home!'
+      );
+    } else {
+      Alert.alert(
+        'Setup Required',
+        'Please enable notifications in your iPhone settings to use this feature.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() }
+        ]
+      );
+    }
+  };
 
   async function handleSignOut() {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -419,6 +487,110 @@ export default function SettingsScreen() {
           </View>
         </View>
       )}
+
+      {/* Call Bridging Section */}
+      <View style={styles.section}>
+        <View style={styles.sectionTitleContainer}>
+          <Text style={typography.sectionHeader}>Call Bridging</Text>
+        </View>
+        <Text style={[typography.footnote, { color: colors.icon, marginBottom: 12 }]}>
+          Ring your analog phone when you receive calls at home
+        </Text>
+        <View style={styles.card}>
+          {!homeWiFiConfigured ? (
+            <>
+              <View style={{ paddingVertical: 8 }}>
+                <Text style={[typography.callout, { marginBottom: 8 }]}>
+                  Setup Required
+                </Text>
+                <Text style={[typography.footnote, { color: colors.icon, marginBottom: 12 }]}>
+                  Connect to your home WiFi network, then tap the button below to configure call bridging.
+                </Text>
+                <Pressable 
+                  style={[styles.buttonPrimary, { backgroundColor: colors.tint }]}
+                  onPress={configureHomeWiFi}
+                >
+                  <IconSymbol name="wifi" size={20} color="#FFFFFF" />
+                  <Text style={[typography.subheadMedium, { color: '#FFFFFF', marginLeft: 8 }]}>
+                    Configure Home WiFi
+                  </Text>
+                </Pressable>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={{ paddingVertical: 8 }}>
+                <View style={[styles.row, { marginBottom: 12 }]}>
+                  <IconSymbol name="checkmark.circle.fill" size={20} color={colors.success} />
+                  <Text style={[typography.callout, { marginLeft: 8, color: colors.success }]}>
+                    Home WiFi Configured
+                  </Text>
+                </View>
+                {currentNetwork && (
+                  <Text style={[typography.footnote, { color: colors.icon, marginBottom: 8 }]}>
+                    Network: {currentNetwork}
+                  </Text>
+                )}
+                {callBridgeStatus && (
+                  <View style={{ marginBottom: 12 }}>
+                    <Text style={[typography.footnote, { color: colors.icon }]}>
+                      Status: {callBridgeStatus.onHomeNetwork ? '✓ On home network' : '○ Away from home'}
+                    </Text>
+                    <Text style={[typography.footnote, { color: colors.icon }]}>
+                      Notifications: {callBridgeStatus.pushNotificationsEnabled ? '✓ Enabled' : '○ Not enabled'}
+                    </Text>
+                  </View>
+                )}
+                {!callBridgeStatus?.pushNotificationsEnabled && (
+                  <Pressable 
+                    style={[styles.buttonPrimary, { backgroundColor: colors.tint }]}
+                    onPress={enableCallBridging}
+                  >
+                    <IconSymbol name="bell.badge" size={20} color="#FFFFFF" />
+                    <Text style={[typography.subheadMedium, { color: '#FFFFFF', marginLeft: 8 }]}>
+                      Enable Call Bridging
+                    </Text>
+                  </Pressable>
+                )}
+                {callBridgeStatus?.pushNotificationsEnabled && (
+                  <View style={[styles.row, { backgroundColor: colors.success + '20', padding: 12, borderRadius: 8 }]}>
+                    <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
+                    <Text style={[typography.subheadMedium, { marginLeft: 8, color: colors.success }]}>
+                      Call Bridging Active
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.divider} />
+              <Pressable 
+                style={[styles.row, { paddingVertical: 8 }]} 
+                onPress={async () => {
+                  Alert.alert(
+                    'Reset Home WiFi',
+                    'This will clear your home WiFi configuration. You\'ll need to set it up again.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { 
+                        text: 'Reset', 
+                        style: 'destructive',
+                        onPress: async () => {
+                          await WiFiDetection.clearHomeNetwork();
+                          await checkCallBridgeStatus();
+                        }
+                      }
+                    ]
+                  );
+                }}
+              >
+                <IconSymbol name="arrow.counterclockwise" size={20} color={colors.icon} />
+                <Text style={[typography.callout, { marginLeft: 12, color: colors.icon }]}>
+                  Reset Configuration
+                </Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      </View>
 
       {/* Actions Section */}
       <View style={styles.section}>

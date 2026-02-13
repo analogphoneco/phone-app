@@ -18,6 +18,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { checkAndRefreshApiKey } from '@/lib/api';
+import { CallBridgeService } from '@/lib/call-bridge-service';
 
 const STRIPE_PUBLISHABLE_KEY = 'pk_live_51SvSglGpYTutwIm7beYnJcGNNSxxNnQLltR2ZU24R4lp4s0mUsQr3cKdgOSxuhddGUlfzSao11YoNiaCLSv8xBEB004z5ssKE3';
 
@@ -43,6 +44,15 @@ export default function RootLayout() {
       // Silently fail - user might not have an account yet
       // or key might be invalid/expired (they'll need to re-authenticate)
     });
+
+    // Initialize call bridging service
+    CallBridgeService.initialize().catch((error) => {
+      console.error('Failed to initialize call bridge service:', error);
+    });
+
+    return () => {
+      CallBridgeService.shutdown();
+    };
   }, []);
 
   if (!fontsLoaded) {

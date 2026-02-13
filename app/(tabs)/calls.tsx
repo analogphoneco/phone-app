@@ -12,7 +12,7 @@ import { useFocusEffect } from "expo-router";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
-import { getCustomerId } from "@/lib/storage";
+import { getCustomerId, getApiKey } from "@/lib/storage";
 import { getApiBase } from "@/lib/api";
 import { 
   loadContactsCache, 

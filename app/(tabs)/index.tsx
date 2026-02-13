@@ -273,56 +273,38 @@ export default function HomeScreen() {
             Get Started
           </Text>
           <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 24, lineHeight: 22 }]}>
-            {customerId ? "Activate your device or buy hardware to get started" : "Sign in with your order email to activate your phone"}
+            Sign in with your account or activate with a code
           </Text>
-          {customerId ? (
-            <View style={{ gap: 12, width: '100%' }}>
-              <Link href="/setup/activate" asChild>
-                <Pressable style={styles.buttonPrimary}>
-                  <Text style={typography.buttonText}>Enter Activation Code</Text>
-                  <IconSymbol name="arrow.right" size={18} color="#fff" />
-                </Pressable>
-              </Link>
+          <View style={{ gap: 12, width: '100%' }}>
+            <Link href="/setup/create-account" asChild>
+              <Pressable style={styles.buttonPrimary}>
+                <Text style={typography.buttonText}>Log In</Text>
+                <IconSymbol name="arrow.right" size={18} color="#fff" />
+              </Pressable>
+            </Link>
+            <Pressable 
+              style={styles.buttonSecondary}
+              onPress={() => {
+                // TODO: Link to Shopify store
+                Alert.alert('Shop Hardware', 'Visit our online store to purchase hardware', [
+                  { text: 'OK' }
+                ]);
+              }}
+            >
+              <Text style={[typography.buttonText, { color: colors.tint }]}>Buy Hardware</Text>
+            </Pressable>
+            <Link href="/setup/activate" asChild>
               <Pressable 
-                style={styles.buttonSecondary}
-                onPress={() => {
-                  // TODO: Link to Shopify store
-                  Alert.alert('Shop Hardware', 'Visit our online store to purchase hardware', [
-                    { text: 'OK' }
-                  ]);
+                style={{
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  alignItems: 'center',
                 }}
               >
-                <Text style={[typography.buttonText, { color: colors.tint }]}>Buy Hardware</Text>
+                <Text style={[typography.footnote, { color: colors.icon }]}>Have an activation code?</Text>
               </Pressable>
-              {hasStaleCreds && (
-                <Pressable 
-                  style={[styles.buttonSecondary, { borderColor: colors.icon + '30' }]}
-                  onPress={handleStartFresh}
-                >
-                  <Text style={[typography.footnote, { color: colors.icon }]}>Start Fresh</Text>
-                </Pressable>
-              )}
-            </View>
-          ) : (
-            <View style={{ gap: 12, width: '100%' }}>
-              <Link href="/setup/create-account" asChild>
-                <Pressable style={styles.buttonPrimary}>
-                  <Text style={typography.buttonText}>Sign In / Create Account</Text>
-                  <IconSymbol name="arrow.right" size={18} color="#fff" />
-                </Pressable>
-              </Link>
-              <Pressable 
-                style={styles.buttonSecondary}
-                onPress={() => {
-                  Alert.alert('New Customer?', 'Purchase hardware from our online store, then sign in with your order email to activate.', [
-                    { text: 'OK' }
-                  ]);
-                }}
-              >
-                <Text style={[typography.buttonText, { color: colors.tint }]}>Buy Hardware</Text>
-              </Pressable>
-            </View>
-          )}
+            </Link>
+          </View>
         </View>
       )}
 
