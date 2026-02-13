@@ -195,37 +195,46 @@ export default function SettingsScreen() {
 
   const configureHomeWiFi = async () => {
     console.log('[configureHomeWiFi] Starting...');
-    const network = await WiFiDetection.detectAndSaveHomeNetwork();
-    console.log('[configureHomeWiFi] Saved network:', network);
-    if (network) {
-      // Ensure save completes and cache is set
-      await new Promise(resolve => setTimeout(resolve, 200));
+    try {
+      const network = await WiFiDetection.detectAndSaveHomeNetwork();
+      console.log('[configureHomeWiFi] Saved network:', network);
       
-      // Double-check the value was saved by reading it back
-      const savedSSID = await WiFiDetection.getHomeNetwork();
-      console.log('[configureHomeWiFi] Verified saved SSID:', savedSSID);
-      
-      // Force update the state AFTER verification
-      const isConfigured = !!savedSSID;
-      console.log('[configureHomeWiFi] Setting homeWiFiConfigured to:', isConfigured);
-      setHomeWiFiConfigured(isConfigured);
-      if (network.ssid) {
-        setCurrentNetwork(network.ssid);
+      if (network) {
+        // Ensure save completes and cache is set
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Double-check the value was saved by reading it back
+        const savedSSID = await WiFiDetection.getHomeNetwork();
+        console.log('[configureHomeWiFi] Verified saved SSID:', savedSSID);
+        
+        // Force update the state AFTER verification
+        const isConfigured = !!savedSSID;
+        console.log('[configureHomeWiFi] Setting homeWiFiConfigured to:', isConfigured);
+        setHomeWiFiConfigured(isConfigured);
+        if (network.ssid) {
+          setCurrentNetwork(network.ssid);
+        }
+        
+        // Also update the call bridge status
+        const status = await CallBridgeService.getStatus();
+        console.log('[configureHomeWiFi] Call bridge status:', status);
+        setCallBridgeStatus(status);
+        
+        Alert.alert(
+          'Home Network Configured',
+          `Your home WiFi "${network.ssid || 'Unknown'}" has been saved. Your analog phone will now ring when you receive calls at home.\n\nDebug: savedSSID=${savedSSID}, configured=${isConfigured}`
+        );
+      } else {
+        Alert.alert(
+          'Not on WiFi',
+          'Please connect to your home WiFi network first, then try again.'
+        );
       }
-      
-      // Also update the call bridge status
-      const status = await CallBridgeService.getStatus();
-      console.log('[configureHomeWiFi] Call bridge status:', status);
-      setCallBridgeStatus(status);
-      
+    } catch (error) {
+      console.error('[configureHomeWiFi] Error:', error);
       Alert.alert(
-        'Home Network Configured',
-        `Your home WiFi "${network.ssid || 'Unknown'}" has been saved. Your analog phone will now ring when you receive calls at home.`
-      );
-    } else {
-      Alert.alert(
-        'Not on WiFi',
-        'Please connect to your home WiFi network first, then try again.'
+        'Error',
+        `Failed to configure WiFi: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   };

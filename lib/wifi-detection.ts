@@ -13,8 +13,21 @@ export class WiFiDetection {
   static async setHomeNetwork(ssid: string) {
     console.log('[WiFiDetection] Setting home network:', ssid);
     this.homeSSID = ssid;
-    await AsyncStorage.setItem(HOME_WIFI_KEY, ssid);
-    console.log('[WiFiDetection] Saved to AsyncStorage');
+    try {
+      await AsyncStorage.setItem(HOME_WIFI_KEY, ssid);
+      console.log('[WiFiDetection] Saved to AsyncStorage');
+      
+      // Verify it was saved
+      const verify = await AsyncStorage.getItem(HOME_WIFI_KEY);
+      console.log('[WiFiDetection] Verification read:', verify);
+      
+      if (verify !== ssid) {
+        console.error('[WiFiDetection] VERIFICATION FAILED! Expected:', ssid, 'Got:', verify);
+      }
+    } catch (error) {
+      console.error('[WiFiDetection] Error saving to AsyncStorage:', error);
+      throw error;
+    }
   }
 
   /**
