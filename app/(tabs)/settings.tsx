@@ -195,7 +195,10 @@ export default function SettingsScreen() {
   const configureHomeWiFi = async () => {
     const network = await WiFiDetection.detectAndSaveHomeNetwork();
     if (network) {
-      // Immediately update state
+      // Wait a moment for AsyncStorage to persist, then update state
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Update state
       setHomeWiFiConfigured(true);
       if (network.ssid) {
         setCurrentNetwork(network.ssid);
@@ -204,9 +207,7 @@ export default function SettingsScreen() {
       Alert.alert(
         'Home Network Configured',
         `Your home WiFi "${network.ssid || 'Unknown'}" has been saved. Your analog phone will now ring when you receive calls at home.`,
-        [{ text: 'OK', onPress: async () => {
-          await checkCallBridgeStatus();
-        }}]
+        [{ text: 'OK' }]
       );
     } else {
       Alert.alert(
