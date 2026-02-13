@@ -18,7 +18,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "co.analogphone.app",
-      "buildNumber": "14",
+      "buildNumber": "15",
       "infoPlist": {
         "NSCameraUsageDescription": "Used to scan QR codes for device setup",
         "NSContactsUsageDescription": "Used to display caller names from your contacts",
