@@ -82,9 +82,10 @@ export class WiFiDetection {
       const ssid = (state.details as any)?.ssid;
       const ipAddress = (state.details as any)?.ipAddress;
       
-      if (ssid) {
-        await this.setHomeNetwork(ssid);
-      }
+      // Always save SOMETHING - use "Unknown" if SSID not available
+      const ssidToSave = ssid || 'Unknown';
+      console.log('[WiFiDetection] Saving SSID:', ssidToSave);
+      await this.setHomeNetwork(ssidToSave);
       
       // Save IP prefix for fallback detection
       if (ipAddress) {
@@ -92,7 +93,7 @@ export class WiFiDetection {
         await AsyncStorage.setItem(HOME_IP_PREFIX_KEY, prefix);
       }
       
-      return { ssid, ipAddress };
+      return { ssid: ssidToSave, ipAddress };
     }
     
     return null;
