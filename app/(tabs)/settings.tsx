@@ -195,11 +195,14 @@ export default function SettingsScreen() {
   const configureHomeWiFi = async () => {
     const network = await WiFiDetection.detectAndSaveHomeNetwork();
     if (network) {
-      // Wait a moment for AsyncStorage to persist, then update state
+      // Ensure save completes and cache is set
       await new Promise(resolve => setTimeout(resolve, 100));
       
+      // Double-check the value was saved by reading it back
+      const savedSSID = await WiFiDetection.getHomeNetwork();
+      
       // Update state
-      setHomeWiFiConfigured(true);
+      setHomeWiFiConfigured(!!savedSSID);
       if (network.ssid) {
         setCurrentNetwork(network.ssid);
       }
