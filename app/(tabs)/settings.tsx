@@ -522,145 +522,69 @@ export default function SettingsScreen() {
         </View>
       )}
 
-      {/* Call Bridging Section */}
+      {/* Call Notifications Section */}
       <View style={styles.section}>
         <View style={styles.sectionTitleContainer}>
-          <Text style={typography.sectionHeader}>Call Bridging</Text>
+          <Text style={typography.sectionHeader}>Call Notifications</Text>
         </View>
         <Text style={[typography.footnote, { color: colors.icon, marginBottom: 12 }]}>
-          Ring your analog phone when you receive calls at home
+          Get notified when someone calls your analog phone
         </Text>
         <View style={styles.card}>
-          {!homeWiFiConfigured ? (
-            <>
-              <View style={{ paddingVertical: 8 }}>
+          <View style={{ paddingVertical: 8 }}>
+            {!callBridgeStatus?.pushNotificationsEnabled ? (
+              <>
                 <Text style={[typography.callout, { marginBottom: 8 }]}>
                   Setup Required
                 </Text>
                 <Text style={[typography.footnote, { color: colors.icon, marginBottom: 12 }]}>
-                  Connect to your home WiFi network, then tap the button below to configure call bridging.
+                  Enable push notifications to see when your analog phone receives calls.
                 </Text>
                 <Pressable 
                   style={[styles.buttonPrimary, { backgroundColor: colors.tint }]}
-                  onPress={configureHomeWiFi}
+                  onPress={enableCallBridging}
                 >
-                  <IconSymbol name="wifi" size={20} color="#FFFFFF" />
+                  <IconSymbol name="bell.badge" size={20} color="#FFFFFF" />
                   <Text style={[typography.subheadMedium, { color: '#FFFFFF', marginLeft: 8 }]}>
-                    Configure Home WiFi
+                    Enable Notifications
+                  </Text>
+                </Pressable>
+              </>
+            ) : (
+              <View>
+                <View style={[styles.row, { backgroundColor: colors.success + '20', padding: 12, borderRadius: 8, marginBottom: 12 }]}>
+                  <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
+                  <Text style={[typography.subheadMedium, { marginLeft: 8, color: colors.success }]}>
+                    Notifications Active
+                  </Text>
+                </View>
+                <Text style={[typography.footnote, { color: colors.icon, marginBottom: 12 }]}>
+                  You'll receive notifications when your analog phone receives calls.
+                </Text>
+                <Pressable 
+                  style={[styles.row, { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: colors.icon + '30' }]}
+                  onPress={async () => {
+                    Alert.alert(
+                      'Manage Notifications',
+                      'To disable push notifications, please go to:\n\niPhone Settings → Analog Phone → Notifications\n\nand turn off Allow Notifications.',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { 
+                          text: 'Open Settings',
+                          onPress: () => Linking.openSettings()
+                        }
+                      ]
+                    );
+                  }}
+                >
+                  <IconSymbol name="gear" size={20} color={colors.icon} />
+                  <Text style={[typography.callout, { marginLeft: 12, color: colors.icon }]}>
+                    Manage Notifications
                   </Text>
                 </Pressable>
               </View>
-            </>
-          ) : (
-            <>
-              <View style={{ paddingVertical: 8 }}>
-                <View style={[styles.row, { marginBottom: 12 }]}>
-                  <IconSymbol name="checkmark.circle.fill" size={20} color={colors.success} />
-                  <Text style={[typography.callout, { marginLeft: 8, color: colors.success }]}>
-                    Home WiFi Configured
-                  </Text>
-                </View>
-                {currentNetwork && (
-                  <Text style={[typography.footnote, { color: colors.icon, marginBottom: 8 }]}>
-                    Network: {currentNetwork}
-                  </Text>
-                )}
-                {callBridgeStatus && (
-                  <View style={{ marginBottom: 12 }}>
-                    <Text style={[typography.footnote, { color: colors.icon }]}>
-                      Status: {callBridgeStatus.onHomeNetwork ? '✓ On home network' : '○ Away from home'}
-                    </Text>
-                    <Text style={[typography.footnote, { color: colors.icon }]}>
-                      Notifications: {callBridgeStatus.pushNotificationsEnabled ? '✓ Enabled' : '○ Not enabled'}
-                    </Text>
-                  </View>
-                )}
-                {!callBridgeStatus?.pushNotificationsEnabled && (
-                  <Pressable 
-                    style={[styles.buttonPrimary, { backgroundColor: colors.tint }]}
-                    onPress={enableCallBridging}
-                  >
-                    <IconSymbol name="bell.badge" size={20} color="#FFFFFF" />
-                    <Text style={[typography.subheadMedium, { color: '#FFFFFF', marginLeft: 8 }]}>
-                      Enable Call Bridging
-                    </Text>
-                  </Pressable>
-                )}
-                {callBridgeStatus?.pushNotificationsEnabled && (
-                  <View>
-                    <View style={[styles.row, { backgroundColor: colors.success + '20', padding: 12, borderRadius: 8, marginBottom: 12 }]}>
-                      <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
-                      <Text style={[typography.subheadMedium, { marginLeft: 8, color: colors.success }]}>
-                        Call Bridging Active
-                      </Text>
-                    </View>
-                    <Pressable 
-                      style={[styles.row, { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: colors.icon + '30' }]}
-                      onPress={async () => {
-                        Alert.alert(
-                          'Disable Notifications',
-                          'You can re-enable call bridging notifications at any time from Settings.',
-                          [
-                            { text: 'Cancel', style: 'cancel' },
-                            { 
-                              text: 'Disable', 
-                              style: 'destructive',
-                              onPress: async () => {
-                                // Note: iOS doesn't allow programmatically disabling notifications
-                                // User needs to do this in iOS Settings
-                                Alert.alert(
-                                  'Manage Notifications',
-                                  'To disable push notifications, please go to:\n\niPhone Settings → Analog Phone → Notifications\n\nand turn off Allow Notifications.',
-                                  [
-                                    { text: 'Cancel', style: 'cancel' },
-                                    { 
-                                      text: 'Open Settings',
-                                      onPress: () => Linking.openSettings()
-                                    }
-                                  ]
-                                );
-                              }
-                            }
-                          ]
-                        );
-                      }}
-                    >
-                      <IconSymbol name="bell.slash" size={20} color={colors.icon} />
-                      <Text style={[typography.callout, { marginLeft: 12, color: colors.icon }]}>
-                        Disable Notifications
-                      </Text>
-                    </Pressable>
-                  </View>
-                )}
-              </View>
-              <View style={styles.divider} />
-              <Pressable 
-                style={[styles.row, { paddingVertical: 8 }]} 
-                onPress={async () => {
-                  Alert.alert(
-                    'Reset Home WiFi',
-                    'This will clear your home WiFi configuration. You\'ll need to set it up again.',
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      { 
-                        text: 'Reset', 
-                        style: 'destructive',
-                        onPress: async () => {
-                          await WiFiDetection.clearHomeNetwork();
-                          await checkCallBridgeStatus();
-                        }
-                      }
-                    ]
-                  );
-                }}
-              >
-                <IconSymbol name="arrow.counterclockwise" size={20} color={colors.icon} />
-                <Text style={[typography.callout, { marginLeft: 12, color: colors.icon }]}>
-                  Reset Configuration
-                </Text>
-              </Pressable>
-            </>
-          )}
+            )}
+          </View>
         </View>
       </View>
 
