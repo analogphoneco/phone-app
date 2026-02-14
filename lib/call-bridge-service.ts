@@ -50,18 +50,19 @@ export class CallBridgeService {
   private static async handleIncomingCall(callData: any) {
     console.log('Incoming call detected:', callData);
 
-    // Check if on home WiFi
+    // Check if on home WiFi - only bridge if at home
     const isHome = await WiFiDetection.isOnHomeNetwork();
     
-    if (!isHome) {
-      console.log('Not on home network, skipping bridge');
-      return;
+    if (isHome) {
+      console.log('On home network, initiating call bridge');
+      // Trigger call bridge to ring analog phone
+      await this.bridgeCall(callData);
+    } else {
+      console.log('Not on home network - call will ring analog phone directly, showing notification only');
     }
-
-    console.log('On home network, initiating call bridge');
-
-    // Trigger call bridge
-    await this.bridgeCall(callData);
+    
+    // Note: Notification is shown regardless of location
+    // This allows user to see missed calls when away from home
   }
 
   /**
