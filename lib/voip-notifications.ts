@@ -24,38 +24,54 @@ export class VoIPNotifications {
    * Register for VoIP push notifications
    */
   static async register() {
-    if (Platform.OS !== 'ios') {
-      console.log('VoIP notifications only supported on iOS');
-      return null;
+    try {
+      console.log('[VoIPNotifications] Starting registration...');
+      
+      if (Platform.OS !== 'ios') {
+        console.log('[VoIPNotifications] Not iOS, returning null');
+        return null;
+      }
+
+      if (!Device.isDevice) {
+        console.log('[VoIPNotifications] Not a physical device, returning null');
+        return null;
+      }
+
+      // Request permissions
+      console.log('[VoIPNotifications] Getting current permissions...');
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      console.log('[VoIPNotifications] Current status:', existingStatus);
+      let finalStatus = existingStatus;
+      
+      if (existingStatus !== 'granted') {
+        console.log('[VoIPNotifications] Requesting permissions...');
+        const { status } = await Notifications.requestPermissionsAsync();
+        console.log('[VoIPNotifications] Requested status:', status);
+        finalStatus = status;
+      }
+      
+      if (finalStatus !== 'granted') {
+        console.log('[VoIPNotifications] Permissions not granted, final status:', finalStatus);
+        return null;
+      }
+
+      // Get push token
+      console.log('[VoIPNotifications] Getting push token...');
+      const tokenData = await Notifications.getExpoPushTokenAsync();
+      const token = tokenData.data;
+      console.log('[VoIPNotifications] Token received:', token ? 'YES' : 'NO');
+      this.pushToken = token;
+
+      // Register token with backend
+      console.log('[VoIPNotifications] Registering with backend...');
+      await this.registerTokenWithBackend(token);
+      console.log('[VoIPNotifications] Registration complete!');
+
+      return token;
+    } catch (error) {
+      console.error('[VoIPNotifications] Error during registration:', error);
+      throw error;
     }
-
-    if (!Device.isDevice) {
-      console.log('Must use physical device for push notifications');
-      return null;
-    }
-
-    // Request permissions
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    
-    if (finalStatus !== 'granted') {
-      console.log('Failed to get push token for push notification!');
-      return null;
-    }
-
-    // Get push token
-    const token = (await Notifications.getExpoPushTokenAsync()).data;
-    this.pushToken = token;
-
-    // Register token with backend
-    await this.registerTokenWithBackend(token);
-
-    return token;
   }
 
   /**

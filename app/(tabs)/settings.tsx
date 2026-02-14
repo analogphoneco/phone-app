@@ -240,23 +240,34 @@ export default function SettingsScreen() {
   };
 
   const enableCallBridging = async () => {
-    // Register for push notifications
-    const token = await VoIPNotifications.register();
-    
-    if (token) {
-      await checkCallBridgeStatus();
+    try {
+      console.log('[enableCallBridging] Starting...');
+      // Register for push notifications
+      const token = await VoIPNotifications.register();
+      console.log('[enableCallBridging] Token received:', token ? 'YES' : 'NO');
+      
+      if (token) {
+        await checkCallBridgeStatus();
+        Alert.alert(
+          'Call Bridging Enabled',
+          `Your analog phone will now ring when you receive calls at home!\n\nDebug: token=${token.substring(0, 20)}...`
+        );
+      } else {
+        console.log('[enableCallBridging] No token - permissions denied or failed');
+        Alert.alert(
+          'Setup Required',
+          'Please enable notifications in your iPhone settings to use this feature.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('[enableCallBridging] Error:', error);
       Alert.alert(
-        'Call Bridging Enabled',
-        'Your analog phone will now ring when you receive calls at home!'
-      );
-    } else {
-      Alert.alert(
-        'Setup Required',
-        'Please enable notifications in your iPhone settings to use this feature.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Open Settings', onPress: () => Linking.openSettings() }
-        ]
+        'Error',
+        `Failed to enable call bridging: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   };
