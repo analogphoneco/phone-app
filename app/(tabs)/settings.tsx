@@ -587,11 +587,49 @@ export default function SettingsScreen() {
                   </Pressable>
                 )}
                 {callBridgeStatus?.pushNotificationsEnabled && (
-                  <View style={[styles.row, { backgroundColor: colors.success + '20', padding: 12, borderRadius: 8 }]}>
-                    <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
-                    <Text style={[typography.subheadMedium, { marginLeft: 8, color: colors.success }]}>
-                      Call Bridging Active
-                    </Text>
+                  <View>
+                    <View style={[styles.row, { backgroundColor: colors.success + '20', padding: 12, borderRadius: 8, marginBottom: 12 }]}>
+                      <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
+                      <Text style={[typography.subheadMedium, { marginLeft: 8, color: colors.success }]}>
+                        Call Bridging Active
+                      </Text>
+                    </View>
+                    <Pressable 
+                      style={[styles.row, { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: colors.icon + '30' }]}
+                      onPress={async () => {
+                        Alert.alert(
+                          'Disable Notifications',
+                          'You can re-enable call bridging notifications at any time from Settings.',
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            { 
+                              text: 'Disable', 
+                              style: 'destructive',
+                              onPress: async () => {
+                                // Note: iOS doesn't allow programmatically disabling notifications
+                                // User needs to do this in iOS Settings
+                                Alert.alert(
+                                  'Manage Notifications',
+                                  'To disable push notifications, please go to:\n\niPhone Settings → Analog Phone → Notifications\n\nand turn off Allow Notifications.',
+                                  [
+                                    { text: 'Cancel', style: 'cancel' },
+                                    { 
+                                      text: 'Open Settings',
+                                      onPress: () => Linking.openSettings()
+                                    }
+                                  ]
+                                );
+                              }
+                            }
+                          ]
+                        );
+                      }}
+                    >
+                      <IconSymbol name="bell.slash" size={20} color={colors.icon} />
+                      <Text style={[typography.callout, { marginLeft: 12, color: colors.icon }]}>
+                        Disable Notifications
+                      </Text>
+                    </Pressable>
                   </View>
                 )}
               </View>
