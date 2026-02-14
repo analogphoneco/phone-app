@@ -18,11 +18,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "co.analogphone.app",
-      "buildNumber": "17",
+      "buildNumber": "18",
       "infoPlist": {
         "NSCameraUsageDescription": "Used to scan QR codes for device setup",
         "NSContactsUsageDescription": "Used to display caller names from your contacts",
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "aps-environment": "production"
       }
     },
     "android": {
@@ -42,6 +45,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#ffffff"
+        }
+      ],
       [
         "expo-splash-screen",
         {

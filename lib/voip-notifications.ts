@@ -57,7 +57,9 @@ export class VoIPNotifications {
 
       // Get push token
       console.log('[VoIPNotifications] Getting push token...');
-      const tokenData = await Notifications.getExpoPushTokenAsync();
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId: '942b8702-45bc-40db-94cc-9c67f608278c'
+      });
       const token = tokenData.data;
       console.log('[VoIPNotifications] Token received:', token ? 'YES' : 'NO');
       this.pushToken = token;
