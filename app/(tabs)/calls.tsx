@@ -7,13 +7,16 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Animated,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
+import { Swipeable } from "react-native-gesture-handler";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { getCustomerId, getApiKey } from "@/lib/storage";
 import { getApiBase } from "@/lib/api";
+import { useMissedCallBadge } from "@/lib/missed-call-badge-context";
 import { 
   loadContactsCache, 
   getContactName, 
@@ -30,6 +33,7 @@ interface CallRecord {
   duration_seconds: number;
   started_at: string;
   ended_at?: string;
+  is_seen: number;
 }
 
 function formatPhoneNumber(num: string): string {
@@ -77,6 +81,7 @@ function formatRelativeTime(isoString: string): string {
 export default function CallsScreen() {
   const colorScheme = useColorScheme();
   const { colors, typography, styles } = useAppStyles(colorScheme);
+  const { markAllSeen, refreshCount: refreshMissed } = useMissedCallBadge();
 
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [calls, setCalls] = useState<CallRecord[]>([]);
@@ -92,7 +97,6 @@ export default function CallsScreen() {
         await loadContactsCache();
         setContactsLoaded(true);
       } else {
-        // Try to request permission
         const granted = await requestContactsPermission();
         if (granted) {
           await loadContactsCache();
@@ -119,9 +123,7 @@ export default function CallsScreen() {
       const headers: HeadersInit = apiKey ? { "X-Api-Key": apiKey } : {};
       const res = await fetch(`${getApiBase()}/api/calls/${encodeURIComponent(cid)}`, { headers });
       
-      if (!res.ok) {
-        throw new Error(`Server returned ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
       
       const data = await res.json();
       setCalls(data.calls || []);
@@ -141,8 +143,41 @@ export default function CallsScreen() {
   useFocusEffect(
     useCallback(() => {
       loadCalls();
-    }, [loadCalls])
+      // Mark all missed calls as seen when the tab is opened, clear badge
+      markAllSeen();
+    }, [loadCalls, markAllSeen])
   );
+
+  const handleDelete = useCallback((call: CallRecord) => {
+    Alert.alert("Delete Call", "Remove this call from your history?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const cid = await getCustomerId();
+            const apiKey = await getApiKey();
+            const headers: HeadersInit = {
+              "Content-Type": "application/json",
+              ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+            };
+            await fetch(
+              `${getApiBase()}/api/calls/${encodeURIComponent(cid!)}/` + call.id,
+              { method: "DELETE", headers }
+            );
+            setCalls((prev) => prev.filter((c) => c.id !== call.id));
+            // If it was an unseen missed call, sync the badge
+            if (call.status === "missed" && !call.is_seen) {
+              refreshMissed();
+            }
+          } catch (e) {
+            Alert.alert("Error", "Failed to delete call record.");
+          }
+        },
+      },
+    ]);
+  }, [refreshMissed]);
 
   const getCallIcon = (call: CallRecord) => {
     if (call.status === "missed") return "phone.down.fill";
@@ -225,66 +260,105 @@ export default function CallsScreen() {
             const displayNumber = isInbound ? call.from_number : call.to_number;
             const callColor = getCallColor(call);
             const statusLabel = getStatusLabel(call);
-            
-            // Get contact name if available
             const contactName = getContactName(displayNumber);
             const displayName = contactName || formatPhoneNumber(displayNumber);
+            const isUnseen = call.status === "missed" && !call.is_seen;
+
+            const renderRightActions = (
+              progress: Animated.AnimatedInterpolation<number>,
+              dragX: Animated.AnimatedInterpolation<number>
+            ) => {
+              const scale = dragX.interpolate({
+                inputRange: [-80, 0],
+                outputRange: [1, 0.5],
+                extrapolate: "clamp",
+              });
+              return (
+                <View style={{ width: 80, justifyContent: "center", alignItems: "center", backgroundColor: colors.error }}>
+                  <Animated.View style={{ transform: [{ scale }], alignItems: "center" }}>
+                    <IconSymbol name="trash.fill" size={24} color="#fff" />
+                    <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600", marginTop: 2 }}>Delete</Text>
+                  </Animated.View>
+                </View>
+              );
+            };
 
             return (
-              <View key={call.id}>
-                {idx > 0 && <View style={styles.divider} />}
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.row,
-                    { paddingVertical: 12 },
-                    pressed && { backgroundColor: colors.icon + "10" },
-                  ]}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-                    <IconSymbol
-                      name={getCallIcon(call)}
-                      size={24}
-                      color={callColor}
-                      style={{ marginRight: 12 }}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[typography.subheadMedium, { color: callColor }]}>
-                        {displayName}
-                      </Text>
-                      {contactName && (
-                        <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
-                          {formatPhoneNumber(displayNumber)}
-                        </Text>
+              <Swipeable
+                key={call.id}
+                renderRightActions={renderRightActions}
+                onSwipeableRightOpen={() => handleDelete(call)}
+                friction={2}
+                rightThreshold={60}
+              >
+                <View style={{ backgroundColor: colors.surface }}>
+                  {idx > 0 && <View style={styles.divider} />}
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.row,
+                      { paddingVertical: 12 },
+                      pressed && { backgroundColor: colors.icon + "10" },
+                      isUnseen && { backgroundColor: "#FF3B3010" },
+                    ]}
+                  >
+                    <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
+                      {/* Unseen dot */}
+                      {isUnseen && (
+                        <View style={{
+                          width: 8, height: 8, borderRadius: 4,
+                          backgroundColor: "#FF3B30", marginRight: 8,
+                        }} />
                       )}
-                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                        <Text style={[typography.footnote, { color: colors.icon }]}>
-                          {isInbound ? "Incoming" : "Outgoing"}
+                      <IconSymbol
+                        name={getCallIcon(call)}
+                        size={24}
+                        color={callColor}
+                        style={{ marginRight: isUnseen ? 4 : 12 }}
+                      />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[
+                          typography.subheadMedium,
+                          { color: callColor },
+                          isUnseen && { fontWeight: "700" },
+                        ]}>
+                          {displayName}
                         </Text>
-                        {statusLabel && (
-                          <>
-                            <Text style={[typography.footnote, { color: colors.icon, marginHorizontal: 4 }]}>
-                              •
-                            </Text>
-                            <Text style={[typography.footnote, { color: callColor }]}>
-                              {statusLabel}
-                            </Text>
-                          </>
+                        {contactName && (
+                          <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
+                            {formatPhoneNumber(displayNumber)}
+                          </Text>
                         )}
+                        <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+                          <Text style={[typography.footnote, { color: colors.icon }]}>
+                            {isInbound ? "Incoming" : "Outgoing"}
+                          </Text>
+                          {statusLabel && (
+                            <>
+                              <Text style={[typography.footnote, { color: colors.icon, marginHorizontal: 4 }]}>•</Text>
+                              <Text style={[typography.footnote, { color: callColor, fontWeight: isUnseen ? "700" : "400" }]}>
+                                {statusLabel}
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                      </View>
+                      <View style={{ alignItems: "flex-end" }}>
+                        <Text style={[typography.footnote, { color: colors.icon }]}>
+                          {formatRelativeTime(call.started_at)}
+                        </Text>
+                        <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
+                          {formatDuration(call.duration_seconds)}
+                        </Text>
                       </View>
                     </View>
-                    <View style={{ alignItems: "flex-end" }}>
-                      <Text style={[typography.footnote, { color: colors.icon }]}>
-                        {formatRelativeTime(call.started_at)}
-                      </Text>
-                      <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
-                        {formatDuration(call.duration_seconds)}
-                      </Text>
-                    </View>
-                  </View>
-                </Pressable>
-              </View>
+                  </Pressable>
+                </View>
+              </Swipeable>
             );
           })}
+          <Text style={{ fontSize: 10, color: colors.icon, textAlign: "center", marginTop: 8, fontStyle: "italic" }}>
+            Swipe left on a call to delete it
+          </Text>
         </View>
       )}
     </ScrollView>

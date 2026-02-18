@@ -7,18 +7,24 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useVoicemailBadge } from '@/lib/voicemail-badge-context';
+import { useMissedCallBadge } from '@/lib/missed-call-badge-context';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { unreadCount, refreshCount } = useVoicemailBadge();
+  const { unseenCount, refreshCount: refreshMissed } = useMissedCallBadge();
 
-  // Poll for new voicemail count every 60 seconds while app is open
+  // Poll for new counts every 60 seconds while app is open
   React.useEffect(() => {
     refreshCount();
-    const interval = setInterval(refreshCount, 60_000);
+    refreshMissed();
+    const interval = setInterval(() => {
+      refreshCount();
+      refreshMissed();
+    }, 60_000);
     return () => clearInterval(interval);
-  }, [refreshCount]);
+  }, [refreshCount, refreshMissed]);
 
   return (
     <Tabs
@@ -64,6 +70,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <IconSymbol size={26} name="phone.badge.waveform.fill" color={color} />
           ),
+          tabBarBadge: unseenCount > 0 ? unseenCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: '#FF3B30',
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: '700',
+          },
         }}
       />
 

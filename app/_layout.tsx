@@ -20,6 +20,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { checkAndRefreshApiKey } from '@/lib/api';
 import { CallBridgeService } from '@/lib/call-bridge-service';
 import { VoicemailBadgeProvider } from '@/lib/voicemail-badge-context';
+import { MissedCallBadgeProvider } from '@/lib/missed-call-badge-context';
 
 const STRIPE_PUBLISHABLE_KEY = 'pk_live_51SvSglGpYTutwIm7beYnJcGNNSxxNnQLltR2ZU24R4lp4s0mUsQr3cKdgOSxuhddGUlfzSao11YoNiaCLSv8xBEB004z5ssKE3';
 
@@ -67,18 +68,20 @@ export default function RootLayout() {
   return (
     <ErrorBoundary>
       <VoicemailBadgeProvider>
-        <StripeProvider 
-          publishableKey={STRIPE_PUBLISHABLE_KEY}
-          merchantIdentifier="merchant.com.analogphone.app"
-        >
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="setup" options={{ headerShown: false }} />
-            </Stack>
-            <StatusBar style="auto" />
-          </ThemeProvider>
-        </StripeProvider>
+        <MissedCallBadgeProvider>
+          <StripeProvider 
+            publishableKey={STRIPE_PUBLISHABLE_KEY}
+            merchantIdentifier="merchant.com.analogphone.app"
+          >
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="setup" options={{ headerShown: false }} />
+              </Stack>
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </StripeProvider>
+        </MissedCallBadgeProvider>
       </VoicemailBadgeProvider>
     </ErrorBoundary>
   );
