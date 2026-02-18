@@ -228,7 +228,7 @@ export default function HomeScreen() {
               <IconSymbol name="phone.fill" size={36} color={colors.tint} />
             </View>
           </View>
-          <Text style={[typography.title1, { letterSpacing: 2, marginBottom: 4 }]}>
+          <Text style={[typography.title1, { marginBottom: 4 }]}>
             {(() => {
               const cleaned = (device.phone_number || "").replace(/\D/g, "");
               const digits = cleaned.startsWith("1") ? cleaned.slice(1) : cleaned;
