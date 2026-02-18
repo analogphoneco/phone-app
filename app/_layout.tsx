@@ -18,7 +18,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { checkAndRefreshApiKey } from '@/lib/api';
-import { CallBridgeService } from '@/lib/call-bridge-service';
+import { NotificationService } from '@/lib/notification-service';
 import { VoicemailBadgeProvider } from '@/lib/voicemail-badge-context';
 import { MissedCallBadgeProvider } from '@/lib/missed-call-badge-context';
 
@@ -48,12 +48,12 @@ export default function RootLayout() {
     });
 
     // Initialize call bridging service
-    CallBridgeService.initialize().catch((error) => {
-      console.error('Failed to initialize call bridge service:', error);
+    NotificationService.initialize().catch((error) => {
+      console.error('Failed to initialize notification service:', error);
     });
 
     return () => {
-      CallBridgeService.shutdown();
+      NotificationService.shutdown();
     };
   }, []);
 

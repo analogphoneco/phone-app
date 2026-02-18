@@ -9,7 +9,7 @@ import { useAppStyles } from "@/constants/styles";
 import Constants from "expo-constants";
 import { getActiveSubscription, getBillingPortalUrl } from "@/lib/subscription";
 import { VoIPNotifications } from "@/lib/voip-notifications";
-import { CallBridgeService } from "@/lib/call-bridge-service";
+import { NotificationService } from "@/lib/notification-service";
 
 interface DeviceInfo {
   user_name?: string;
@@ -182,7 +182,7 @@ export default function SettingsScreen() {
       
       if (token) {
         // Update status after registration
-        const status = await CallBridgeService.getStatus();
+        const status = await NotificationService.getStatus();
         setCallBridgeStatus(status);
         
         Alert.alert(
