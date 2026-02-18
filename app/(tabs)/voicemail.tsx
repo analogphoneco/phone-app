@@ -23,7 +23,6 @@ import { showError } from "@/lib/errors";
 import {
   listVoicemails,
   markVoicemailAsListened,
-  deleteVoicemail,
   getVoicemailGreeting,
   setVoicemailGreetingText,
   formatDuration,
@@ -123,27 +122,6 @@ export default function VoicemailScreen() {
     }
   }, [decrement]);
 
-  const handleDelete = useCallback((vm: Voicemail) => {
-    Alert.alert("Delete Voicemail", "Are you sure you want to delete this voicemail?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteVoicemail(vm.id);
-            setVoicemails((prev) => prev.filter((v) => v.id !== vm.id));
-            // If it was unread, decrement badge
-            if (vm.is_new) decrement();
-          } catch (e: unknown) {
-            const error = showError(e);
-            Alert.alert(error.title, error.message, error.buttons);
-          }
-        },
-      },
-    ]);
-  }, [decrement]);
-
   const handleSaveGreeting = async () => {
     if (!customerId) return;
     
@@ -185,32 +163,13 @@ export default function VoicemailScreen() {
       );
     };
 
-    const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
-      const scale = dragX.interpolate({
-        inputRange: [-80, 0],
-        outputRange: [1, 0.5],
-        extrapolate: 'clamp',
-      });
-      return (
-        <View style={{ width: 80, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.error }}>
-          <Animated.View style={{ transform: [{ scale }], alignItems: 'center' }}>
-            <IconSymbol name="trash.fill" size={24} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600', marginTop: 2 }}>Delete</Text>
-          </Animated.View>
-        </View>
-      );
-    };
-
     return (
       <Swipeable
         key={vm.id}
         renderLeftActions={renderLeftActions}
-        renderRightActions={renderRightActions}
         onSwipeableLeftOpen={() => handleMarkAsListened(vm)}
-        onSwipeableRightOpen={() => handleDelete(vm)}
         friction={2}
         leftThreshold={60}
-        rightThreshold={60}
       >
         <View
           style={[
@@ -305,7 +264,7 @@ export default function VoicemailScreen() {
               {/* Swipe hint for new voicemails */}
               {vm.is_new && (
                 <Text style={{ fontSize: 10, color: colors.icon, marginTop: 6, fontStyle: 'italic' }}>
-                  ← Swipe right to mark read · Swipe left to delete →
+                  ← Swipe right to mark as read
                 </Text>
               )}
             </View>
