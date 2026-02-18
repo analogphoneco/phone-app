@@ -10,6 +10,7 @@ import {
   TextInput,
   Animated,
 } from "react-native";
+import * as Notifications from 'expo-notifications';
 import { useFocusEffect } from "expo-router";
 import { Swipeable } from "react-native-gesture-handler";
 import { ThemedView } from "@/components/themed-view";
@@ -23,6 +24,7 @@ import { showError } from "@/lib/errors";
 import {
   listVoicemails,
   markVoicemailAsListened,
+  getNewVoicemailCount,
   getVoicemailGreeting,
   setVoicemailGreetingText,
   formatDuration,
@@ -106,6 +108,8 @@ export default function VoicemailScreen() {
   useFocusEffect(
     useCallback(() => {
       loadVoicemails();
+      // Clear the iOS app icon badge when voicemail tab is opened
+      Notifications.setBadgeCountAsync(0).catch(() => {});
     }, [loadVoicemails])
   );
 
@@ -117,6 +121,12 @@ export default function VoicemailScreen() {
         prev.map((v) => (v.id === vm.id ? { ...v, is_new: 0 } : v))
       );
       decrement();
+      // Sync system badge count after marking as read
+      const cid = await getCustomerId();
+      if (cid) {
+        const remaining = await getNewVoicemailCount(cid);
+        Notifications.setBadgeCountAsync(remaining).catch(() => {});
+      }
     } catch (e) {
       console.log("[Voicemail] Error marking as listened:", e);
     }
