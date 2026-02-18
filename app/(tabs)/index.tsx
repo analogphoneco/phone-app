@@ -4,6 +4,7 @@ import { Link, useFocusEffect, useRouter } from "expo-router";
 import { getApiBase } from "../../lib/api";
 import { getCredentials, clearCredentials, getApiKey } from "../../lib/storage";
 import { getActiveSubscription } from "../../lib/subscription";
+import { VoIPNotifications } from "@/lib/voip-notifications";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
@@ -72,6 +73,11 @@ export default function HomeScreen() {
           setDevice(data.device || null);
           setHasStaleCreds(false);
           
+          // Ensure push token is registered now that we have valid credentials
+          VoIPNotifications.register().catch((e) => {
+            console.log('[Home] Push token registration failed:', e);
+          });
+
           // Load usage stats for warnings
           loadUsageData(creds.customerId);
         } else {
