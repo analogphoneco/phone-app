@@ -229,7 +229,14 @@ export default function HomeScreen() {
             </View>
           </View>
           <Text style={[typography.title1, { letterSpacing: 2, marginBottom: 4 }]}>
-            {device.phone_number}
+            {(() => {
+              const cleaned = (device.phone_number || "").replace(/\D/g, "");
+              const digits = cleaned.startsWith("1") ? cleaned.slice(1) : cleaned;
+              if (digits.length === 10) {
+                return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+              }
+              return device.phone_number;
+            })()}
           </Text>
           <Text style={[typography.callout, { color: colors.icon, marginBottom: 16 }]}>
             {userName || "Your phone"}
