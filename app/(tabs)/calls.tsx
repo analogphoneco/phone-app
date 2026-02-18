@@ -222,7 +222,7 @@ export default function CallsScreen() {
         </View>
       ) : (
         <View style={[styles.section, { marginTop: 24 }]}>
-          {calls.map((call, idx) => {
+          {calls.map((call) => {
             const isInbound = call.direction === "inbound";
             const displayNumber = isInbound ? call.from_number : call.to_number;
             const callColor = getCallColor(call);
@@ -232,68 +232,74 @@ export default function CallsScreen() {
             const isUnseen = call.status === "missed" && !call.is_seen;
 
             return (
-              <View key={call.id} style={{ backgroundColor: colors.surface }}>
-                {idx > 0 && <View style={styles.divider} />}
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.row,
-                    { paddingVertical: 12 },
-                    pressed && { backgroundColor: colors.icon + "10" },
-                    isUnseen && { backgroundColor: "#FF3B3010" },
-                  ]}
-                >
-                  <View style={{ flexDirection: "row", alignItems: "center", flex: 1 }}>
-                    {/* Unseen dot */}
-                    {isUnseen && (
-                      <View style={{
-                        width: 8, height: 8, borderRadius: 4,
-                        backgroundColor: "#FF3B30", marginRight: 8,
-                      }} />
+              <Pressable
+                key={call.id}
+                style={({ pressed }) => [
+                  styles.card,
+                  { marginBottom: 10, flexDirection: "row", alignItems: "center" },
+                  pressed && { opacity: 0.85 },
+                  isUnseen && { backgroundColor: "#FF3B3010", borderColor: "#FF3B3030" },
+                ]}
+              >
+                {/* Unseen dot */}
+                {isUnseen && (
+                  <View style={{
+                    width: 8, height: 8, borderRadius: 4,
+                    backgroundColor: "#FF3B30", marginRight: 10, flexShrink: 0,
+                  }} />
+                )}
+
+                {/* Call direction icon */}
+                <View style={{
+                  width: 44, height: 44, borderRadius: 22,
+                  backgroundColor: callColor + "18",
+                  justifyContent: "center", alignItems: "center",
+                  marginRight: 14, flexShrink: 0,
+                }}>
+                  <IconSymbol name={getCallIcon(call)} size={22} color={callColor} />
+                </View>
+
+                {/* Call info */}
+                <View style={{ flex: 1 }}>
+                  <Text style={[
+                    typography.subheadMedium,
+                    { color: callColor },
+                    isUnseen && { fontWeight: "700" },
+                  ]}>
+                    {displayName}
+                  </Text>
+                  {contactName && (
+                    <Text style={[typography.footnote, { color: colors.icon, marginTop: 1 }]}>
+                      {formatPhoneNumber(displayNumber)}
+                    </Text>
+                  )}
+                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 3 }}>
+                    <Text style={[typography.footnote, { color: colors.icon }]}>
+                      {isInbound ? "Incoming" : "Outgoing"}
+                    </Text>
+                    {statusLabel && (
+                      <>
+                        <Text style={[typography.footnote, { color: colors.icon, marginHorizontal: 4 }]}>·</Text>
+                        <Text style={[typography.footnote, { color: callColor, fontWeight: isUnseen ? "700" : "400" }]}>
+                          {statusLabel}
+                        </Text>
+                      </>
                     )}
-                    <IconSymbol
-                      name={getCallIcon(call)}
-                      size={24}
-                      color={callColor}
-                      style={{ marginRight: isUnseen ? 4 : 12 }}
-                    />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[
-                        typography.subheadMedium,
-                        { color: callColor },
-                        isUnseen && { fontWeight: "700" },
-                      ]}>
-                        {displayName}
-                      </Text>
-                      {contactName && (
-                        <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
-                          {formatPhoneNumber(displayNumber)}
-                        </Text>
-                      )}
-                      <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
-                        <Text style={[typography.footnote, { color: colors.icon }]}>
-                          {isInbound ? "Incoming" : "Outgoing"}
-                        </Text>
-                        {statusLabel && (
-                          <>
-                            <Text style={[typography.footnote, { color: colors.icon, marginHorizontal: 4 }]}>•</Text>
-                            <Text style={[typography.footnote, { color: callColor, fontWeight: isUnseen ? "700" : "400" }]}>
-                              {statusLabel}
-                            </Text>
-                          </>
-                        )}
-                      </View>
-                    </View>
-                    <View style={{ alignItems: "flex-end" }}>
-                      <Text style={[typography.footnote, { color: colors.icon }]}>
-                        {formatRelativeTime(call.started_at)}
-                      </Text>
-                      <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
-                        {formatDuration(call.duration_seconds)}
-                      </Text>
-                    </View>
                   </View>
-                </Pressable>
-              </View>
+                </View>
+
+                {/* Time + duration */}
+                <View style={{ alignItems: "flex-end", flexShrink: 0, marginLeft: 8 }}>
+                  <Text style={[typography.footnote, { color: colors.icon }]}>
+                    {formatRelativeTime(call.started_at)}
+                  </Text>
+                  {call.duration_seconds > 0 && (
+                    <Text style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
+                      {formatDuration(call.duration_seconds)}
+                    </Text>
+                  )}
+                </View>
+              </Pressable>
             );
           })}
         </View>
