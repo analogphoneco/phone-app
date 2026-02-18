@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, ScrollView, Pressable, Alert, Linking, ActivityIndicator } from "react-native";
 import { getApiBase, checkAndRefreshApiKey, getPaymentFailures } from "../../lib/api";
 import { getCredentials, clearCredentials, getCustomerId, getApiKey } from "../../lib/storage";
@@ -50,7 +50,7 @@ export default function SettingsScreen() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus | null>(null);
   const [paymentFailures, setPaymentFailures] = useState<any[]>([]);
-  const [callBridgeStatus, setCallBridgeStatus] = useState<any>(null);
+  const [notificationStatus, setNotificationStatus] = useState<any>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -173,24 +173,24 @@ export default function SettingsScreen() {
     }, [loadData])
   );
 
-  const enableCallBridging = async () => {
+  const enableNotifications = async () => {
     try {
-      console.log('[enableCallBridging] Starting...');
+      console.log('[enableNotifications] Starting...');
       // Register for push notifications
       const token = await VoIPNotifications.register();
-      console.log('[enableCallBridging] Token received:', token ? 'YES' : 'NO');
+      console.log('[enableNotifications] Token received:', token ? 'YES' : 'NO');
       
       if (token) {
         // Update status after registration
         const status = await NotificationService.getStatus();
-        setCallBridgeStatus(status);
+        setNotificationStatus(status);
         
         Alert.alert(
           'Call Notifications Enabled',
           'You will now receive notifications when your analog phone receives calls.'
         );
       } else {
-        console.log('[enableCallBridging] No token - permissions denied or failed');
+        console.log('[enableNotifications] No token - permissions denied or failed');
         Alert.alert(
           'Setup Required',
           'Please enable notifications in your iPhone settings to use this feature.',
@@ -201,10 +201,10 @@ export default function SettingsScreen() {
         );
       }
     } catch (error) {
-      console.error('[enableCallBridging] Error:', error);
+      console.error('[enableNotifications] Error:', error);
       Alert.alert(
         'Error',
-        `Failed to enable call bridging: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to enable notifications: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   };
@@ -469,7 +469,7 @@ export default function SettingsScreen() {
         </Text>
         <View style={styles.card}>
           <View style={{ paddingVertical: 8 }}>
-            {!callBridgeStatus?.pushNotificationsEnabled ? (
+            {!notificationStatus?.pushNotificationsEnabled ? (
               <>
                 <Text style={[typography.callout, { marginBottom: 8 }]}>
                   Setup Required
@@ -479,7 +479,7 @@ export default function SettingsScreen() {
                 </Text>
                 <Pressable 
                   style={[styles.buttonPrimary, { backgroundColor: colors.tint }]}
-                  onPress={enableCallBridging}
+                  onPress={enableNotifications}
                 >
                   <IconSymbol name="bell.badge" size={20} color="#FFFFFF" />
                   <Text style={[typography.subheadMedium, { color: '#FFFFFF', marginLeft: 8 }]}>
