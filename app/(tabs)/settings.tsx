@@ -659,11 +659,6 @@ export default function SettingsScreen() {
               {Constants.expoConfig?.version || "1.0.0"}
             </Text>
           </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={[typography.callout, { flex: 1 }]}>API Server</Text>
-            <Text style={[typography.mono, { color: colors.icon }]}>{getApiBase()}</Text>
-          </View>
         </View>
       </View>
 
