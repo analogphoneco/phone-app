@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Linking,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -146,6 +147,12 @@ export default function CallsScreen() {
     }, [loadCalls, markAllSeen])
   );
 
+  const handleDial = useCallback((phoneNumber: string) => {
+    const cleaned = phoneNumber.replace(/\D/g, "");
+    const dialNumber = cleaned.startsWith("1") ? cleaned : `1${cleaned}`;
+    Linking.openURL(`tel:${dialNumber}`);
+  }, []);
+
   const getCallIcon = (call: CallRecord) => {
     if (call.status === "missed") return "phone.down.fill";
     if (call.direction === "inbound") return "phone.arrow.down.left.fill";
@@ -234,6 +241,7 @@ export default function CallsScreen() {
             return (
               <Pressable
                 key={call.id}
+                onPress={() => handleDial(displayNumber)}
                 style={({ pressed }) => [
                   styles.card,
                   { marginBottom: 10, flexDirection: "row", alignItems: "center" },
