@@ -8,10 +8,8 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import Constants from "expo-constants";
 import { getActiveSubscription, getBillingPortalUrl } from "@/lib/subscription";
-import { WiFiDetection } from "@/lib/wifi-detection";
 import { VoIPNotifications } from "@/lib/voip-notifications";
 import { CallBridgeService } from "@/lib/call-bridge-service";
-import NetInfo from '@react-native-community/netinfo';
 
 interface DeviceInfo {
   user_name?: string;
@@ -52,8 +50,6 @@ export default function SettingsScreen() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [apiKeyStatus, setApiKeyStatus] = useState<ApiKeyStatus | null>(null);
   const [paymentFailures, setPaymentFailures] = useState<any[]>([]);
-  const [homeWiFiConfigured, setHomeWiFiConfigured] = useState(false);
-  const [currentNetwork, setCurrentNetwork] = useState<string>('');
   const [callBridgeStatus, setCallBridgeStatus] = useState<any>(null);
 
   const loadData = useCallback(async () => {
@@ -174,70 +170,8 @@ export default function SettingsScreen() {
     useCallback(() => {
       setLoading(true);
       loadData();
-      checkCallBridgeStatus();
     }, [loadData])
   );
-
-  // Check call bridge configuration status
-  const checkCallBridgeStatus = async () => {
-    const homeSSID = await WiFiDetection.getHomeNetwork();
-    console.log('[checkCallBridgeStatus] homeSSID:', homeSSID, 'configured:', !!homeSSID);
-    setHomeWiFiConfigured(!!homeSSID);
-    
-    const netInfo = await NetInfo.fetch();
-    if (netInfo.type === 'wifi' && (netInfo.details as any)?.ssid) {
-      setCurrentNetwork((netInfo.details as any).ssid);
-    }
-
-    const status = await CallBridgeService.getStatus();
-    setCallBridgeStatus(status);
-  };
-
-  const configureHomeWiFi = async () => {
-    console.log('[configureHomeWiFi] Starting...');
-    try {
-      const network = await WiFiDetection.detectAndSaveHomeNetwork();
-      console.log('[configureHomeWiFi] Saved network:', network);
-      
-      if (network) {
-        // Ensure save completes and cache is set
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        // Double-check the value was saved by reading it back
-        const savedSSID = await WiFiDetection.getHomeNetwork();
-        console.log('[configureHomeWiFi] Verified saved SSID:', savedSSID);
-        
-        // Force update the state AFTER verification
-        const isConfigured = !!savedSSID;
-        console.log('[configureHomeWiFi] Setting homeWiFiConfigured to:', isConfigured);
-        setHomeWiFiConfigured(isConfigured);
-        if (network.ssid) {
-          setCurrentNetwork(network.ssid);
-        }
-        
-        // Also update the call bridge status
-        const status = await CallBridgeService.getStatus();
-        console.log('[configureHomeWiFi] Call bridge status:', status);
-        setCallBridgeStatus(status);
-        
-        Alert.alert(
-          'Home Network Configured',
-          `Your home WiFi "${network.ssid || 'Unknown'}" has been saved. Your analog phone will now ring when you receive calls at home.\n\nDebug: savedSSID=${savedSSID}, configured=${isConfigured}`
-        );
-      } else {
-        Alert.alert(
-          'Not on WiFi',
-          'Please connect to your home WiFi network first, then try again.'
-        );
-      }
-    } catch (error) {
-      console.error('[configureHomeWiFi] Error:', error);
-      Alert.alert(
-        'Error',
-        `Failed to configure WiFi: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  };
 
   const enableCallBridging = async () => {
     try {
@@ -247,10 +181,13 @@ export default function SettingsScreen() {
       console.log('[enableCallBridging] Token received:', token ? 'YES' : 'NO');
       
       if (token) {
-        await checkCallBridgeStatus();
+        // Update status after registration
+        const status = await CallBridgeService.getStatus();
+        setCallBridgeStatus(status);
+        
         Alert.alert(
-          'Call Bridging Enabled',
-          `Your analog phone will now ring when you receive calls at home!\n\nDebug: token=${token.substring(0, 20)}...`
+          'Call Notifications Enabled',
+          'You will now receive notifications when your analog phone receives calls.'
         );
       } else {
         console.log('[enableCallBridging] No token - permissions denied or failed');

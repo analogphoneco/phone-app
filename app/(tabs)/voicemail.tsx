@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -7,10 +7,11 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
-  Linking,
   TextInput,
+  Animated,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
+import { Swipeable } from "react-native-gesture-handler";
 import { ThemedView } from "@/components/themed-view";
 import { ThemedText } from "@/components/themed-text";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -23,7 +24,6 @@ import {
   listVoicemails,
   markVoicemailAsListened,
   deleteVoicemail,
-  getVoicemailRecordingUrl,
   getVoicemailGreeting,
   setVoicemailGreetingText,
   formatDuration,
@@ -38,10 +38,12 @@ import {
   hasContactsPermission,
   requestContactsPermission,
 } from "@/lib/contacts";
+import { useVoicemailBadge } from "@/lib/voicemail-badge-context";
 
 export default function VoicemailScreen() {
   const colorScheme = useColorScheme();
   const { colors, typography, styles } = useAppStyles(colorScheme);
+  const { refreshCount, decrement } = useVoicemailBadge();
 
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [voicemails, setVoicemails] = useState<Voicemail[]>([]);
@@ -86,6 +88,9 @@ export default function VoicemailScreen() {
       setCustomerId(cid);
       const { voicemails: vms } = await listVoicemails(cid);
       setVoicemails(vms);
+
+      // Sync badge count with server
+      await refreshCount();
       
       // Load greeting
       const greetingData = await getVoicemailGreeting(cid);
@@ -97,7 +102,7 @@ export default function VoicemailScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [refreshCount]);
 
   useFocusEffect(
     useCallback(() => {
@@ -105,7 +110,20 @@ export default function VoicemailScreen() {
     }, [loadVoicemails])
   );
 
-  const handleDelete = (vm: Voicemail) => {
+  const handleMarkAsListened = useCallback(async (vm: Voicemail) => {
+    if (!vm.is_new) return;
+    try {
+      await markVoicemailAsListened(vm.id);
+      setVoicemails((prev) =>
+        prev.map((v) => (v.id === vm.id ? { ...v, is_new: 0 } : v))
+      );
+      decrement();
+    } catch (e) {
+      console.log("[Voicemail] Error marking as listened:", e);
+    }
+  }, [decrement]);
+
+  const handleDelete = useCallback((vm: Voicemail) => {
     Alert.alert("Delete Voicemail", "Are you sure you want to delete this voicemail?", [
       { text: "Cancel", style: "cancel" },
       {
@@ -115,6 +133,8 @@ export default function VoicemailScreen() {
           try {
             await deleteVoicemail(vm.id);
             setVoicemails((prev) => prev.filter((v) => v.id !== vm.id));
+            // If it was unread, decrement badge
+            if (vm.is_new) decrement();
           } catch (e: unknown) {
             const error = showError(e);
             Alert.alert(error.title, error.message, error.buttons);
@@ -122,7 +142,7 @@ export default function VoicemailScreen() {
         },
       },
     ]);
-  };
+  }, [decrement]);
 
   const handleSaveGreeting = async () => {
     if (!customerId) return;
@@ -147,122 +167,151 @@ export default function VoicemailScreen() {
   };
 
   const renderVoicemail = ({ item: vm }: { item: Voicemail }) => {
-    return (
-      <View
-        style={[
-          styles.card,
-          { marginBottom: 12 },
-          vm.is_new ? { borderLeftWidth: 3, borderLeftColor: colors.tint } : null,
-        ]}
-      >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {/* Voicemail icon */}
-          <View
-            style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-              backgroundColor: vm.is_new ? colors.tint : colors.icon + "30",
-              justifyContent: "center",
-              alignItems: "center",
-              marginRight: 12,
-            }}
-          >
-            <IconSymbol
-              name="phone.badge.waveform"
-              size={24}
-              color="#fff"
-            />
-          </View>
+    const renderLeftActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
+      const scale = dragX.interpolate({
+        inputRange: [0, 80],
+        outputRange: [0.5, 1],
+        extrapolate: 'clamp',
+      });
+      return (
+        <View style={{ width: 80, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.success }}>
+          <Animated.View style={{ transform: [{ scale }], alignItems: 'center' }}>
+            <IconSymbol name="checkmark.circle.fill" size={24} color="#fff" />
+            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600', marginTop: 2 }}>
+              {vm.is_new ? 'Read' : 'Unread'}
+            </Text>
+          </Animated.View>
+        </View>
+      );
+    };
 
-          {/* Info */}
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <View style={{ flex: 1 }}>
-                {(() => {
-                  const contactName = getContactName(vm.from_number);
-                  const displayName = contactName || formatPhoneNumber(vm.from_number);
-                  return (
-                    <>
-                      <ThemedText style={typography.subheadMedium}>
-                        {displayName}
-                      </ThemedText>
-                      {contactName && (
-                        <ThemedText style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
-                          {formatPhoneNumber(vm.from_number)}
-                        </ThemedText>
-                      )}
-                    </>
-                  );
-                })()}
-              </View>
-              {vm.is_new ? (
-                <View
-                  style={{
-                    backgroundColor: colors.tint,
-                    paddingHorizontal: 8,
-                    paddingVertical: 2,
-                    borderRadius: 10,
-                  }}
-                >
-                  <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>
-                    NEW
-                  </Text>
-                </View>
-              ) : null}
+    const renderRightActions = (progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
+      const scale = dragX.interpolate({
+        inputRange: [-80, 0],
+        outputRange: [1, 0.5],
+        extrapolate: 'clamp',
+      });
+      return (
+        <View style={{ width: 80, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.error }}>
+          <Animated.View style={{ transform: [{ scale }], alignItems: 'center' }}>
+            <IconSymbol name="trash.fill" size={24} color="#fff" />
+            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '600', marginTop: 2 }}>Delete</Text>
+          </Animated.View>
+        </View>
+      );
+    };
+
+    return (
+      <Swipeable
+        key={vm.id}
+        renderLeftActions={renderLeftActions}
+        renderRightActions={renderRightActions}
+        onSwipeableLeftOpen={() => handleMarkAsListened(vm)}
+        onSwipeableRightOpen={() => handleDelete(vm)}
+        friction={2}
+        leftThreshold={60}
+        rightThreshold={60}
+      >
+        <View
+          style={[
+            styles.card,
+            { marginBottom: 12, backgroundColor: colors.surface },
+            vm.is_new ? { borderLeftWidth: 3, borderLeftColor: colors.tint } : null,
+          ]}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {/* Voicemail icon */}
+            <View
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 25,
+                backgroundColor: vm.is_new ? colors.tint : colors.icon + "30",
+                justifyContent: "center",
+                alignItems: "center",
+                marginRight: 12,
+              }}
+            >
+              <IconSymbol name="phone.badge.waveform" size={24} color="#fff" />
             </View>
-            <View style={{ flexDirection: "row", marginTop: 4 }}>
-              <ThemedText style={[typography.footnote, { color: colors.icon }]}>
-                {formatRelativeTime(vm.created_at)}
-              </ThemedText>
-              {vm.duration_seconds > 0 && (
-                <ThemedText style={[typography.footnote, { color: colors.icon, marginLeft: 12 }]}>
-                  {formatDuration(vm.duration_seconds)}
+
+            {/* Info */}
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <View style={{ flex: 1 }}>
+                  {(() => {
+                    const contactName = getContactName(vm.from_number);
+                    const displayName = contactName || formatPhoneNumber(vm.from_number);
+                    return (
+                      <>
+                        <ThemedText style={typography.subheadMedium}>
+                          {displayName}
+                        </ThemedText>
+                        {contactName && (
+                          <ThemedText style={[typography.footnote, { color: colors.icon, marginTop: 2 }]}>
+                            {formatPhoneNumber(vm.from_number)}
+                          </ThemedText>
+                        )}
+                      </>
+                    );
+                  })()}
+                </View>
+                {vm.is_new ? (
+                  <View
+                    style={{
+                      backgroundColor: colors.tint,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 10,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 11, fontWeight: "600" }}>
+                      NEW
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+              <View style={{ flexDirection: "row", marginTop: 4 }}>
+                <ThemedText style={[typography.footnote, { color: colors.icon }]}>
+                  {formatRelativeTime(vm.created_at)}
+                </ThemedText>
+                {vm.duration_seconds > 0 && (
+                  <ThemedText style={[typography.footnote, { color: colors.icon, marginLeft: 12 }]}>
+                    {formatDuration(vm.duration_seconds)}
+                  </ThemedText>
+                )}
+              </View>
+              {vm.transcription && (
+                <ThemedText
+                  style={[typography.footnote, { marginTop: 6, fontStyle: "italic" }]}
+                  numberOfLines={2}
+                >
+                  "{vm.transcription}"
                 </ThemedText>
               )}
-            </View>
-            {vm.transcription && (
-              <ThemedText
-                style={[typography.footnote, { marginTop: 6, fontStyle: "italic" }]}
-                numberOfLines={2}
-              >
-                "{vm.transcription}"
-              </ThemedText>
-            )}
 
-            {/* Audio Player */}
-            {vm.recording_url && (
-              <View style={{ marginTop: 8 }}>
-                <AudioPlayer
-                  url={vm.recording_url}
-                  colors={colors}
-                  typography={typography}
-                />
-              </View>
-            )}
+              {/* Audio Player - marks as listened when played */}
+              {vm.recording_url && (
+                <View style={{ marginTop: 8 }}>
+                  <AudioPlayer
+                    url={vm.recording_url}
+                    colors={colors}
+                    typography={typography}
+                    onPlay={() => handleMarkAsListened(vm)}
+                  />
+                </View>
+              )}
 
-            {/* Action buttons */}
-            <View style={{ flexDirection: "row", marginTop: 8, gap: 8 }}>
-              {/* Delete button */}
-              <Pressable
-                onPress={() => handleDelete(vm)}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  paddingVertical: 6,
-                  paddingHorizontal: 12,
-                  borderRadius: 6,
-                  backgroundColor: colors.surface,
-                  gap: 6,
-                }}
-              >
-                <IconSymbol name="trash" size={16} color={colors.error} />
-                <Text style={[typography.footnote, { color: colors.error }]}>Delete</Text>
-              </Pressable>
+              {/* Swipe hint for new voicemails */}
+              {vm.is_new && (
+                <Text style={{ fontSize: 10, color: colors.icon, marginTop: 6, fontStyle: 'italic' }}>
+                  ← Swipe right to mark read · Swipe left to delete →
+                </Text>
+              )}
             </View>
           </View>
         </View>
-      </View>
+      </Swipeable>
     );
   };
 

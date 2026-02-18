@@ -11,9 +11,10 @@ interface AudioPlayerProps {
   url: string | null;
   colors: any;
   typography: any;
+  onPlay?: () => void;
 }
 
-export function AudioPlayer({ url, colors, typography }: AudioPlayerProps) {
+export function AudioPlayer({ url, colors, typography, onPlay }: AudioPlayerProps) {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +57,10 @@ export function AudioPlayer({ url, colors, typography }: AudioPlayerProps) {
 
       setSound(newSound);
       setIsLoading(false);
+
+      // Auto-play after load and notify parent
+      await newSound.playAsync();
+      onPlay?.();
     } catch (e) {
       console.error('[AudioPlayer] Failed to load audio:', e);
       setError('Failed to load audio');
@@ -95,6 +100,8 @@ export function AudioPlayer({ url, colors, typography }: AudioPlayerProps) {
           await sound.setPositionAsync(0);
         }
         await sound.playAsync();
+        // Notify parent that playback started (e.g. to mark as listened)
+        onPlay?.();
       }
     } catch (e) {
       console.error('[AudioPlayer] Play/pause error:', e);

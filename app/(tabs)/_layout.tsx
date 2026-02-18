@@ -6,10 +6,19 @@ import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useVoicemailBadge } from '@/lib/voicemail-badge-context';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { unreadCount, refreshCount } = useVoicemailBadge();
+
+  // Poll for new voicemail count every 60 seconds while app is open
+  React.useEffect(() => {
+    refreshCount();
+    const interval = setInterval(refreshCount, 60_000);
+    return () => clearInterval(interval);
+  }, [refreshCount]);
 
   return (
     <Tabs
@@ -65,6 +74,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <IconSymbol size={26} name="recordingtape" color={color} />
           ),
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: colors.tint,
+            color: '#fff',
+            fontSize: 11,
+            fontWeight: '700',
+          },
         }}
       />
 
