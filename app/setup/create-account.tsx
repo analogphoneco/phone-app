@@ -177,9 +177,9 @@ export default function CreateAccount() {
         
         <Text style={[typography.title1, { textAlign: "center", marginBottom: 8 }]}>Welcome</Text>
         <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 32 }]}>
-          Enter your email to get started{"\n"}
+          New or returning — just enter your email.{"\n"}
           <Text style={{ fontSize: 14, color: colors.icon }}>
-            Use the same email you used when ordering
+            Use the same email you used when ordering.
           </Text>
         </Text>
 

@@ -4,7 +4,8 @@ import { useRouter } from "expo-router";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { getApiBase } from "@/lib/api";
-import { getCredentials } from "@/lib/storage";
+import { getCredentials, getApiKey } from "@/lib/storage";
+import { getActiveSubscription } from "@/lib/subscription";
 
 /**
  * Setup Router
@@ -37,26 +38,38 @@ export default function SetupHome() {
 
       // Check if they have an activated device
       setStatus('Checking device status...');
-      const response = await fetch(`${getApiBase()}/api/customer/${creds.customerId}/device`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data.device) {
-          // Device exists - check subscription status
-          setStatus('Device found! Checking subscription...');
-          
-          // TODO: Check Stripe subscription status
-          // For now, if they have a device, assume they need to subscribe
+      const apiKey = await getApiKey();
+      const headers: HeadersInit = apiKey ? { "X-Api-Key": apiKey } : {};
+      const deviceRes = await fetch(
+        `${getApiBase()}/api/devices/${encodeURIComponent(creds.customerId)}`,
+        { headers }
+      );
+
+      if (deviceRes.ok) {
+        const deviceData = await deviceRes.json();
+
+        if (deviceData.device?.phone_number) {
+          // Device activated — check for an active subscription
+          setStatus('Checking subscription...');
+          try {
+            const sub = await getActiveSubscription(creds.customerId);
+            if (sub && sub.status === 'active') {
+              // Fully set up — go straight to the main app
+              router.replace("/(tabs)");
+              return;
+            }
+          } catch {
+            // Can't confirm sub — send to subscribe screen to be safe
+          }
           router.replace("/setup/subscribe");
           return;
         }
       }
 
-      // No device found → needs activation
+      // No activated device found → needs activation
       setStatus('No device found...');
       router.replace("/setup/activate");
-      
+
     } catch (error) {
       console.error('Setup check error:', error);
       // On error, go to activation screen (safest fallback)
