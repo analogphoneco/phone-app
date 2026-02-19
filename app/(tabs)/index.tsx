@@ -43,6 +43,8 @@ export default function HomeScreen() {
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [usageAlerts, setUsageAlerts] = useState<UsageAlert[]>([]);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
+  const [doNotDisturb, setDoNotDisturb] = useState(false);
+  const [dndLoading, setDndLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -77,6 +79,17 @@ export default function HomeScreen() {
           VoIPNotifications.register().catch((e) => {
             console.log('[Home] Push token registration failed:', e);
           });
+
+          // Load DND preference from backend
+          try {
+            const dndRes = await fetch(`${getApiBase()}/api/customers/${creds.customerId}/do-not-disturb`, { headers });
+            if (dndRes.ok) {
+              const dndData = await dndRes.json();
+              setDoNotDisturb(dndData.doNotDisturb ?? false);
+            }
+          } catch (e) {
+            console.log('[Home] Could not load DND preference:', e);
+          }
 
           // Load usage stats for warnings
           loadUsageData(creds.customerId);
@@ -141,6 +154,30 @@ export default function HomeScreen() {
     setDevice(null);
     setHasStaleCreds(false);
     router.push("/setup");
+  };
+
+  const toggleDoNotDisturb = async () => {
+    if (!customerId || dndLoading) return;
+    const newValue = !doNotDisturb;
+    setDndLoading(true);
+    try {
+      const apiKey = await getApiKey();
+      const res = await fetch(`${getApiBase()}/api/customers/${customerId}/do-not-disturb`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+        },
+        body: JSON.stringify({ enabled: newValue }),
+      });
+      if (res.ok) {
+        setDoNotDisturb(newValue);
+      }
+    } catch (e) {
+      console.log('[Home] DND toggle failed:', e);
+    } finally {
+      setDndLoading(false);
+    }
   };
 
   const isSetupComplete = customerId && device?.phone_number;
@@ -249,21 +286,47 @@ export default function HomeScreen() {
           </Text>
           <View style={[styles.row, { 
             gap: 8, 
-            backgroundColor: colors.success + "15",
+            backgroundColor: doNotDisturb ? colors.warning + "15" : colors.success + "15",
             paddingHorizontal: 16,
             paddingVertical: 8,
             borderRadius: 20,
+            marginBottom: 16,
           }]}>
             <View style={{
               width: 8,
               height: 8,
               borderRadius: 4,
-              backgroundColor: colors.success,
+              backgroundColor: doNotDisturb ? colors.warning : colors.success,
             }} />
-            <Text style={[typography.subheadMedium, { color: colors.success }]}>
-              Ready
+            <Text style={[typography.subheadMedium, { color: doNotDisturb ? colors.warning : colors.success }]}>
+              {doNotDisturb ? "Silenced" : "Ready"}
             </Text>
           </View>
+          <Pressable
+            onPress={toggleDoNotDisturb}
+            disabled={dndLoading}
+            style={[{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: doNotDisturb ? colors.warning + "50" : colors.icon + "20",
+              backgroundColor: doNotDisturb ? colors.warning + "10" : colors.surface,
+              opacity: dndLoading ? 0.6 : 1,
+            }]}
+          >
+            <IconSymbol
+              name={doNotDisturb ? "bell.slash.fill" : "bell.fill"}
+              size={16}
+              color={doNotDisturb ? colors.warning : colors.icon}
+            />
+            <Text style={[typography.subheadMedium, { color: doNotDisturb ? colors.warning : colors.icon }]}>
+              {doNotDisturb ? "Silence On — Tap to Ring" : "Silence Phone"}
+            </Text>
+          </Pressable>
         </View>
       ) : (
         <View style={[styles.cardLarge, styles.center, { marginBottom: 24 }]}>
@@ -415,54 +478,14 @@ export default function HomeScreen() {
                   <IconSymbol name="antenna.radiowaves.left.and.right" size={22} color={colors.tint} />
                 </View>
                 <View>
-                  <Text style={typography.bodyMedium}>SIP Ready</Text>
+                  <Text style={typography.bodyMedium}>Phone Connected</Text>
                   <Text style={[typography.caption, { color: colors.icon }]}>
-                    {device.user_name || "Credentials configured"}
+                    Your analog phone is set up
                   </Text>
                 </View>
               </View>
               <IconSymbol name="checkmark.circle.fill" size={24} color={colors.success} />
             </View>
-          </View>
-        </View>
-      )}
-
-      {isSetupComplete && (
-        <View style={styles.section}>
-          <View style={styles.sectionTitleContainer}>
-            <Text style={typography.sectionHeader}>Quick Actions</Text>
-          </View>
-          <View style={[styles.row, { gap: 12 }]}>
-            <Link href="/setup/provision" asChild>
-              <Pressable style={[styles.card, styles.center, { flex: 1, paddingVertical: 20, gap: 10 }]}>
-                <View style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: colors.accent + "20",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}>
-                  <IconSymbol name="antenna.radiowaves.left.and.right" size={22} color={colors.accent} />
-                </View>
-                <Text style={typography.subheadMedium}>Provision</Text>
-              </Pressable>
-            </Link>
-            <Link href="/(tabs)/settings" asChild>
-              <Pressable style={[styles.card, styles.center, { flex: 1, paddingVertical: 20, gap: 10 }]}>
-                <View style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 22,
-                  backgroundColor: colors.tint + "15",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}>
-                  <IconSymbol name="slider.horizontal.3" size={22} color={colors.tint} />
-                </View>
-                <Text style={typography.subheadMedium}>Settings</Text>
-              </Pressable>
-            </Link>
           </View>
         </View>
       )}

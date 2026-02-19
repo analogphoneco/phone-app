@@ -103,4 +103,3 @@ export async function clearCustomerId() {
     console.warn("expo-secure-store not available. Install it with: expo install expo-secure-store");
   }
 }
-
