@@ -424,10 +424,6 @@ export default function SettingsScreen() {
               <Text style={[typography.callout, { marginLeft: 12, flex: 1 }]}>Account ID</Text>
               <Text style={[typography.mono, { color: colors.icon }]}>{customerId.slice(0, 16)}...</Text>
             </View>
-            <View style={styles.divider} />
-            <Text style={[typography.footnote, { color: colors.icon, marginTop: 8 }]}>
-              No phone connected yet. Complete setup to add a phone number.
-            </Text>
           </View>
         ) : (
           <View style={styles.card}>

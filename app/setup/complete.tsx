@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, Share, Alert } from "react-native";
 import * as Clipboard from "expo-clipboard";
+import * as Notifications from "expo-notifications";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
@@ -20,6 +21,23 @@ export default function SetupComplete() {
   
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [notifStatus, setNotifStatus] = useState<"pending" | "granted" | "denied">("pending");
+
+  // Request notification permission on mount with context already established
+  useEffect(() => {
+    (async () => {
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status === "granted") {
+        setNotifStatus("granted");
+        return;
+      }
+      // Small delay so the success screen renders first
+      setTimeout(async () => {
+        const { status: newStatus } = await Notifications.requestPermissionsAsync();
+        setNotifStatus(newStatus === "granted" ? "granted" : "denied");
+      }, 800);
+    })();
+  }, []);
   
   // Provisioning URL for auto-config
   const provisionUrl = `${getApiBase()}/provision/ht802/${customerId}.xml`;
@@ -52,9 +70,31 @@ export default function SetupComplete() {
       </View>
       
       <Text style={[typography.title1, { textAlign: "center", marginBottom: 8 }]}>You're all set!</Text>
-      <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 32 }]}>
+      <Text style={[typography.callout, { color: colors.icon, textAlign: "center", marginBottom: 16 }]}>
         Your Analog number is ready. Connect your phone below.
       </Text>
+
+      {/* Notification permission status */}
+      {notifStatus !== "pending" && (
+        <View style={[styles.row, {
+          backgroundColor: notifStatus === "granted" ? colors.success + "15" : colors.warning + "15",
+          borderRadius: 12,
+          padding: 12,
+          marginBottom: 24,
+          gap: 10,
+        }]}>
+          <IconSymbol
+            name={notifStatus === "granted" ? "bell.badge.fill" : "bell.slash.fill"}
+            size={20}
+            color={notifStatus === "granted" ? colors.success : colors.warning}
+          />
+          <Text style={[typography.footnote, { flex: 1, color: notifStatus === "granted" ? colors.success : colors.warning }]}>
+            {notifStatus === "granted"
+              ? "Notifications enabled — you'll be alerted for calls and voicemails."
+              : "Notifications off — enable them in Settings to get call alerts."}
+          </Text>
+        </View>
+      )}
 
       {/* Phone Number Card */}
       <View style={[styles.cardLarge, { marginBottom: 24 }]}>

@@ -205,6 +205,33 @@ export async function setVoicemailGreetingText(
   return data.greeting;
 }
 
+/**
+ * Upload a recorded audio greeting.
+ * audioBase64: base64-encoded audio file (m4a/mp4).
+ * mime: MIME type, default 'audio/m4a'.
+ */
+export async function setVoicemailGreetingAudio(
+  customerId: string,
+  audioBase64: string,
+  mime = "audio/m4a"
+): Promise<VoicemailGreeting> {
+  const headers = await getHeaders();
+  const apiBase = getApiBase();
+  const response = await fetch(
+    `${apiBase}/api/customers/${customerId}/voicemail-greeting/audio`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ audioBase64, mime }),
+    }
+  );
+  const data = await response.json();
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || "Failed to upload audio greeting");
+  }
+  return data.greeting;
+}
+
 // ---- Formatting Helpers ----
 
 /**
