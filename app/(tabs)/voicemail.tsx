@@ -11,6 +11,7 @@ import {
   Animated,
 } from "react-native";
 import { Audio } from "expo-av";
+import * as FileSystem from "expo-file-system";
 import * as Notifications from 'expo-notifications';
 import { useFocusEffect } from "expo-router";
 import { Swipeable } from "react-native-gesture-handler";
@@ -265,18 +266,9 @@ export default function VoicemailScreen() {
     if (!customerId || !recordingUri) return;
     try {
       setUploadingAudio(true);
-      // Read file as base64
-      const response = await fetch(recordingUri);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      const base64 = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          // Strip data URL prefix
-          resolve(result.split(',')[1] ?? result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
+      // Read file as base64 using expo-file-system (FileReader is not available in React Native)
+      const base64 = await FileSystem.readAsStringAsync(recordingUri, {
+        encoding: FileSystem.EncodingType.Base64,
       });
       const updatedGreeting = await setVoicemailGreetingAudio(customerId, base64, "audio/m4a");
       setGreeting(updatedGreeting);
