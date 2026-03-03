@@ -1,3 +1,4 @@
+import * as Notifications from 'expo-notifications';
 import { VoIPNotifications } from './voip-notifications';
 
 /**
@@ -27,10 +28,15 @@ export class NotificationService {
   }
 
   static async getStatus() {
+    // Check actual OS permission — the in-memory pushToken is null after every app restart
+    // even if the user already granted permission, so we can't rely on it for display.
+    const { status } = await Notifications.getPermissionsAsync();
+    const permissionGranted = status === 'granted';
     const pushToken = VoIPNotifications.getPushToken();
     return {
       initialized: this.isInitialized,
-      pushNotificationsEnabled: !!pushToken,
+      // Show as enabled if OS permission is granted, regardless of in-memory token state.
+      pushNotificationsEnabled: permissionGranted || !!pushToken,
     };
   }
 }

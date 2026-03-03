@@ -170,6 +170,9 @@ export default function SettingsScreen() {
     useCallback(() => {
       setLoading(true);
       loadData();
+      // Re-check notification status every time the tab is focused —
+      // the user may have toggled permissions in iOS Settings and come back.
+      NotificationService.getStatus().then(setNotificationStatus).catch(() => {});
     }, [loadData])
   );
 
