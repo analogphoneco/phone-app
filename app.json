@@ -16,7 +16,7 @@
     },
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "co.analogphone.app",
       "buildNumber": "21",
       "infoPlist": {
