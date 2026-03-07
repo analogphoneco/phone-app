@@ -162,16 +162,19 @@ export default function HomeScreen() {
     setDndLoading(true);
     try {
       const apiKey = await getApiKey();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+      };
       const res = await fetch(`${getApiBase()}/api/customers/${customerId}/do-not-disturb`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(apiKey ? { "X-Api-Key": apiKey } : {}),
-        },
+        headers,
         body: JSON.stringify({ enabled: newValue }),
       });
       if (res.ok) {
-        setDoNotDisturb(newValue);
+        // Read back confirmed server state rather than trusting local toggle
+        const data = await res.json();
+        setDoNotDisturb(data.doNotDisturb ?? newValue);
       }
     } catch (e) {
       console.log('[Home] DND toggle failed:', e);
