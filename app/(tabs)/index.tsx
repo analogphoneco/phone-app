@@ -158,6 +158,7 @@ export default function HomeScreen() {
 
   const toggleDoNotDisturb = async () => {
     if (!customerId || dndLoading) return;
+    const previousValue = doNotDisturb;
     const newValue = !doNotDisturb;
     setDndLoading(true);
     try {
@@ -175,9 +176,16 @@ export default function HomeScreen() {
         // Read back confirmed server state rather than trusting local toggle
         const data = await res.json();
         setDoNotDisturb(data.doNotDisturb ?? newValue);
+      } else {
+        // Server rejected — revert to known good state
+        setDoNotDisturb(previousValue);
+        Alert.alert('Could not update Do Not Disturb', 'Please check your connection and try again.');
       }
     } catch (e) {
+      // Network error — revert to known good state
+      setDoNotDisturb(previousValue);
       console.log('[Home] DND toggle failed:', e);
+      Alert.alert('Could not update Do Not Disturb', 'Please check your connection and try again.');
     } finally {
       setDndLoading(false);
     }
