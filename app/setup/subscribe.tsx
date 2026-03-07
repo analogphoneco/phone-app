@@ -149,11 +149,11 @@ export default function Subscribe() {
       
       const subscriptionId = subData.subscription?.id;
       
-      // Step 2: Get payment sheet params (need to pass Stripe API version)
+      // Step 2: Get payment sheet params
       const sheetRes = await fetch(`${getApiBase()}/api/subscriptions/${subscriptionId}/payment-sheet`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ apiVersion: "2023-10-16" }),
+        body: JSON.stringify({ apiVersion: "2024-11-20.acacia" }),
       });
       const sheetData = await sheetRes.json();
       if (!sheetRes.ok || !sheetData.ok) {
