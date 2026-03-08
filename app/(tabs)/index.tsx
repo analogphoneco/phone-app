@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { View, Text, Pressable, RefreshControl, ScrollView, Alert } from "react-native";
+import { View, Text, Pressable, RefreshControl, ScrollView, Alert, Switch } from "react-native";
 import { Link, useFocusEffect, useRouter } from "expo-router";
 import { getApiBase } from "../../lib/api";
 import { getCredentials, clearCredentials, getApiKey } from "../../lib/storage";
@@ -46,6 +46,20 @@ export default function HomeScreen() {
   const [doNotDisturb, setDoNotDisturb] = useState(false);
   const [dndLoading, setDndLoading] = useState(false);
 
+  interface DndSchedule {
+    enabled: boolean;
+    start: string;
+    end: string;
+    days: number[];
+  }
+  const [dndSchedule, setDndSchedule] = useState<DndSchedule>({
+    enabled: false,
+    start: "22:00",
+    end: "08:00",
+    days: [0, 1, 2, 3, 4, 5, 6],
+  });
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+
   const loadData = useCallback(async () => {
     try {
       const res = await fetch(`${getApiBase()}/api/health`);
@@ -89,6 +103,24 @@ export default function HomeScreen() {
             }
           } catch (e) {
             console.log('[Home] Could not load DND preference:', e);
+          }
+
+          // Load DND schedule
+          try {
+            const schedRes = await fetch(`${getApiBase()}/api/customers/${creds.customerId}/dnd-schedule`, { headers });
+            if (schedRes.ok) {
+              const schedData = await schedRes.json();
+              if (schedData.schedule) {
+                setDndSchedule({
+                  enabled: !!schedData.schedule.enabled,
+                  start: schedData.schedule.start ?? "22:00",
+                  end: schedData.schedule.end ?? "08:00",
+                  days: Array.isArray(schedData.schedule.days) ? schedData.schedule.days : [0,1,2,3,4,5,6],
+                });
+              }
+            }
+          } catch (e) {
+            console.log('[Home] Could not load DND schedule:', e);
           }
 
           // Load usage stats for warnings
@@ -192,6 +224,28 @@ export default function HomeScreen() {
   };
 
   const isSetupComplete = customerId && device?.phone_number;
+
+  const saveDndSchedule = async (updated: typeof dndSchedule) => {
+    if (!customerId || scheduleLoading) return;
+    setScheduleLoading(true);
+    try {
+      const apiKey = await getApiKey();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(apiKey ? { "X-Api-Key": apiKey } : {}),
+      };
+      await fetch(`${getApiBase()}/api/customers/${customerId}/dnd-schedule`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(updated),
+      });
+      setDndSchedule(updated);
+    } catch (e) {
+      console.log('[Home] Could not save DND schedule:', e);
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
 
   return (
     <ScrollView
@@ -338,6 +392,207 @@ export default function HomeScreen() {
               {doNotDisturb ? "Silence On — Tap to Ring" : "Silence Phone"}
             </Text>
           </Pressable>
+
+          {/* ── DND Schedule ─────────────────────────────────── */}
+          <View style={{
+            width: "100%",
+            marginTop: 20,
+            paddingTop: 20,
+            borderTopWidth: 1,
+            borderTopColor: colors.icon + "15",
+          }}>
+            {/* Header row */}
+            <View style={[styles.rowSpaced, { marginBottom: 12 }]}>
+              <View style={[styles.row, { gap: 8 }]}>
+                <IconSymbol name="moon.fill" size={16} color={colors.tint} />
+                <Text style={typography.subheadMedium}>Auto-Silence Schedule</Text>
+              </View>
+              <Switch
+                value={dndSchedule.enabled}
+                onValueChange={(val) => saveDndSchedule({ ...dndSchedule, enabled: val })}
+                disabled={scheduleLoading}
+                trackColor={{ false: colors.icon + "30", true: colors.tint + "80" }}
+                thumbColor={dndSchedule.enabled ? colors.tint : colors.icon}
+              />
+            </View>
+
+            {dndSchedule.enabled && (
+              <>
+                {/* Time range */}
+                <View style={[styles.row, { gap: 10, marginBottom: 14, justifyContent: "center" }]}>
+                  {/* From */}
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={[typography.caption, { color: colors.icon, marginBottom: 4 }]}>From</Text>
+                    <View style={{
+                      backgroundColor: colors.tint + "12",
+                      borderRadius: 10,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderWidth: 1,
+                      borderColor: colors.tint + "30",
+                    }}>
+                      {/* Simple time-picker via +/- taps on hours/minutes */}
+                      <View style={[styles.row, { gap: 4 }]}>
+                        {["start"].map(() => {
+                          const [h, m] = dndSchedule.start.split(":").map(Number);
+                          const display = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+                          return (
+                            <View key="start" style={[styles.row, { gap: 6 }]}>
+                              <View style={{ alignItems: "center" }}>
+                                <Pressable onPress={() => {
+                                  const newH = (h + 1) % 24;
+                                  saveDndSchedule({ ...dndSchedule, start: `${String(newH).padStart(2,"0")}:${String(m).padStart(2,"0")}` });
+                                }}>
+                                  <IconSymbol name="chevron.up" size={12} color={colors.tint} />
+                                </Pressable>
+                                <Text style={[typography.title3, { color: colors.tint, minWidth: 28, textAlign: "center" }]}>
+                                  {String(h).padStart(2,"0")}
+                                </Text>
+                                <Pressable onPress={() => {
+                                  const newH = (h + 23) % 24;
+                                  saveDndSchedule({ ...dndSchedule, start: `${String(newH).padStart(2,"0")}:${String(m).padStart(2,"0")}` });
+                                }}>
+                                  <IconSymbol name="chevron.down" size={12} color={colors.tint} />
+                                </Pressable>
+                              </View>
+                              <Text style={[typography.title3, { color: colors.tint }]}>:</Text>
+                              <View style={{ alignItems: "center" }}>
+                                <Pressable onPress={() => {
+                                  const newM = (m + 15) % 60;
+                                  saveDndSchedule({ ...dndSchedule, start: `${String(h).padStart(2,"0")}:${String(newM).padStart(2,"0")}` });
+                                }}>
+                                  <IconSymbol name="chevron.up" size={12} color={colors.tint} />
+                                </Pressable>
+                                <Text style={[typography.title3, { color: colors.tint, minWidth: 28, textAlign: "center" }]}>
+                                  {String(m).padStart(2,"0")}
+                                </Text>
+                                <Pressable onPress={() => {
+                                  const newM = (m + 45) % 60;
+                                  saveDndSchedule({ ...dndSchedule, start: `${String(h).padStart(2,"0")}:${String(newM).padStart(2,"0")}` });
+                                }}>
+                                  <IconSymbol name="chevron.down" size={12} color={colors.tint} />
+                                </Pressable>
+                              </View>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 18 }}>
+                    <IconSymbol name="arrow.right" size={14} color={colors.icon} />
+                  </View>
+
+                  {/* To */}
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={[typography.caption, { color: colors.icon, marginBottom: 4 }]}>To</Text>
+                    <View style={{
+                      backgroundColor: colors.tint + "12",
+                      borderRadius: 10,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderWidth: 1,
+                      borderColor: colors.tint + "30",
+                    }}>
+                      <View style={[styles.row, { gap: 6 }]}>
+                        {(() => {
+                          const [h, m] = dndSchedule.end.split(":").map(Number);
+                          return (
+                            <>
+                              <View style={{ alignItems: "center" }}>
+                                <Pressable onPress={() => {
+                                  const newH = (h + 1) % 24;
+                                  saveDndSchedule({ ...dndSchedule, end: `${String(newH).padStart(2,"0")}:${String(m).padStart(2,"0")}` });
+                                }}>
+                                  <IconSymbol name="chevron.up" size={12} color={colors.tint} />
+                                </Pressable>
+                                <Text style={[typography.title3, { color: colors.tint, minWidth: 28, textAlign: "center" }]}>
+                                  {String(h).padStart(2,"0")}
+                                </Text>
+                                <Pressable onPress={() => {
+                                  const newH = (h + 23) % 24;
+                                  saveDndSchedule({ ...dndSchedule, end: `${String(newH).padStart(2,"0")}:${String(m).padStart(2,"0")}` });
+                                }}>
+                                  <IconSymbol name="chevron.down" size={12} color={colors.tint} />
+                                </Pressable>
+                              </View>
+                              <Text style={[typography.title3, { color: colors.tint }]}>:</Text>
+                              <View style={{ alignItems: "center" }}>
+                                <Pressable onPress={() => {
+                                  const newM = (m + 15) % 60;
+                                  saveDndSchedule({ ...dndSchedule, end: `${String(h).padStart(2,"0")}:${String(newM).padStart(2,"0")}` });
+                                }}>
+                                  <IconSymbol name="chevron.up" size={12} color={colors.tint} />
+                                </Pressable>
+                                <Text style={[typography.title3, { color: colors.tint, minWidth: 28, textAlign: "center" }]}>
+                                  {String(m).padStart(2,"0")}
+                                </Text>
+                                <Pressable onPress={() => {
+                                  const newM = (m + 45) % 60;
+                                  saveDndSchedule({ ...dndSchedule, end: `${String(h).padStart(2,"0")}:${String(newM).padStart(2,"0")}` });
+                                }}>
+                                  <IconSymbol name="chevron.down" size={12} color={colors.tint} />
+                                </Pressable>
+                              </View>
+                            </>
+                          );
+                        })()}
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Day pills */}
+                <View style={[styles.row, { justifyContent: "center", gap: 6, flexWrap: "wrap" }]}>
+                  {[
+                    { label: "Su", day: 0 },
+                    { label: "Mo", day: 1 },
+                    { label: "Tu", day: 2 },
+                    { label: "We", day: 3 },
+                    { label: "Th", day: 4 },
+                    { label: "Fr", day: 5 },
+                    { label: "Sa", day: 6 },
+                  ].map(({ label, day }) => {
+                    const active = dndSchedule.days.includes(day);
+                    return (
+                      <Pressable
+                        key={day}
+                        onPress={() => {
+                          const newDays = active
+                            ? dndSchedule.days.filter((d) => d !== day)
+                            : [...dndSchedule.days, day].sort((a, b) => a - b);
+                          saveDndSchedule({ ...dndSchedule, days: newDays });
+                        }}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 18,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: active ? colors.tint : colors.icon + "12",
+                          borderWidth: 1,
+                          borderColor: active ? colors.tint : colors.icon + "20",
+                        }}
+                      >
+                        <Text style={[typography.caption, {
+                          color: active ? "#fff" : colors.icon,
+                          fontWeight: active ? "700" : "400",
+                        }]}>
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                <Text style={[typography.caption, { color: colors.icon, textAlign: "center", marginTop: 10 }]}>
+                  Phone will silence from {dndSchedule.start} to {dndSchedule.end}
+                </Text>
+              </>
+            )}
+          </View>
+          {/* ─────────────────────────────────────────────────── */}
         </View>
       ) : (
         <View style={[styles.cardLarge, styles.center, { marginBottom: 24 }]}>
