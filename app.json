@@ -25,7 +25,8 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
-        "aps-environment": "production"
+        "aps-environment": "production",
+        "com.apple.developer.in-app-payments": ["merchant.co.analogphone.app"]
       }
     },
     "android": {
