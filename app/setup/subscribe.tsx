@@ -167,9 +167,7 @@ export default function Subscribe() {
         customerEphemeralKeySecret: sheetData.ephemeralKey,
         paymentIntentClientSecret: sheetData.paymentIntent,
         defaultBillingDetails: { name: "" },
-        // Apple Pay disabled - requires merchant ID setup in Apple Developer account
-        // applePay: { merchantCountryCode: "US" },
-        // googlePay: { merchantCountryCode: "US", testEnv: true },
+        applePay: { merchantCountryCode: "US" },
       });
 
       if (initError) {
