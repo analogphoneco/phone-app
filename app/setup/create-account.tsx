@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useLayoutEffect } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { getApiBase } from "../../lib/api";
 import { saveCredentials, saveCustomerId, saveApiKey, clearCredentials } from "../../lib/storage";
-import { useRouter, Link } from "expo-router";
+import { useRouter, Link, useNavigation } from "expo-router";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAppStyles } from "@/constants/styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -17,11 +17,23 @@ function isValidEmail(email: string) {
 
 export default function CreateAccount() {
   const router = useRouter();
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const { colors, typography, styles } = useAppStyles(colorScheme);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Add a Cancel button to the header so users can exit setup without completing it
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable onPress={() => router.replace("/(tabs)")} hitSlop={12}>
+          <Text style={{ color: colors.icon, fontSize: 16 }}>Cancel</Text>
+        </Pressable>
+      ),
+    });
+  }, [navigation, colors.icon]);
 
   async function handleReset() {
     Alert.alert(

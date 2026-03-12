@@ -409,6 +409,15 @@ export default function Subscribe() {
       <Text style={[typography.caption, { color: colors.icon, textAlign: "center", marginTop: 24 }]}>
         Cancel anytime. You'll be charged {formatPrice(plan.priceCents)}/{plan.interval}.
       </Text>
+
+      {/* Escape hatch — let user return to home without subscribing */}
+      <Pressable
+        onPress={() => router.replace("/(tabs)")}
+        style={{ marginTop: 20, paddingVertical: 12, alignItems: "center" }}
+        disabled={subscribing}
+      >
+        <Text style={[typography.callout, { color: colors.icon }]}>Maybe later</Text>
+      </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
