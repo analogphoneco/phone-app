@@ -72,7 +72,7 @@ export default function RootLayout() {
         <MissedCallBadgeProvider>
           <StripeProvider 
             publishableKey={STRIPE_PUBLISHABLE_KEY}
-            merchantIdentifier="merchant.com.analogphone"
+            merchantIdentifier="merchant.co.analogphone.app"
           >
             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
               <Stack>

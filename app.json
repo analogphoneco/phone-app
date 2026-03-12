@@ -64,7 +64,7 @@
       [
         "@stripe/stripe-react-native",
         {
-          "merchantIdentifier": "merchant.com.analogphone",
+          "merchantIdentifier": "merchant.co.analogphone.app",
           "enableGooglePay": false
         }
       ]
