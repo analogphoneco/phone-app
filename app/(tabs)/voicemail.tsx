@@ -11,7 +11,7 @@ import {
   Animated,
 } from "react-native";
 import { Audio } from "expo-av";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Notifications from 'expo-notifications';
 import { useFocusEffect } from "expo-router";
 import { Swipeable } from "react-native-gesture-handler";
