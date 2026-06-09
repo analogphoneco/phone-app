@@ -626,7 +626,6 @@ export default function HomeScreen() {
             <Pressable 
               style={styles.buttonSecondary}
               onPress={() => {
-                // TODO: Link to Shopify store
                 Alert.alert('Shop Hardware', 'Visit our online store to purchase hardware', [
                   { text: 'OK' }
                 ]);
