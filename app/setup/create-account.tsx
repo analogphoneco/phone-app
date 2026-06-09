@@ -21,7 +21,6 @@ export default function CreateAccount() {
   const colorScheme = useColorScheme();
   const { colors, typography, styles } = useAppStyles(colorScheme);
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Add a Cancel button to the header so users can exit setup without completing it
@@ -55,17 +54,7 @@ export default function CreateAccount() {
 
   async function handleCreate() {
     const trimmedEmail = email.trim().toLowerCase();
-    const trimmedName = name.trim();
-    
-    if (!trimmedName) {
-      return Alert.alert("Name Required", "Please enter your name to continue.");
-    }
-    if (trimmedName.length < 2) {
-      return Alert.alert("Name Too Short", "Please enter your full name (at least 2 characters).");
-    }
-    if (trimmedName.length > 100) {
-      return Alert.alert("Name Too Long", "Please enter a shorter name (maximum 100 characters).");
-    }
+
     if (!trimmedEmail) {
       return Alert.alert("Email Required", "Please enter your email address.");
     }
@@ -102,7 +91,6 @@ export default function CreateAccount() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           id: newCustomerId, 
-          name: trimmedName, 
           email: trimmedEmail 
         }),
         signal: controller.signal,
@@ -116,12 +104,27 @@ export default function CreateAccount() {
       const customerId = data.customer?.id || newCustomerId;
       
       // Save credentials locally
-      await saveCredentials({ customerId, userName: trimmedName });
+      await saveCredentials({ customerId });
       await saveCustomerId(customerId);
       
-      // Save API key if returned
+      // Save API key if returned — if not returned, fetch it explicitly
       if (data.customer?.apiKey) {
         await saveApiKey(data.customer.apiKey);
+      } else {
+        // Backend returned existing customer without apiKey — fetch it explicitly
+        try {
+          const keyRes = await fetch(`${getApiBase()}/api/customers`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: trimmedEmail }),
+          });
+          const keyData = await keyRes.json();
+          if (keyData.customer?.apiKey) {
+            await saveApiKey(keyData.customer.apiKey);
+          }
+        } catch {
+          // Non-fatal — subscribe screen will recover
+        }
       }
 
       // Try to auto-activate if there's a device for this email
@@ -196,20 +199,6 @@ export default function CreateAccount() {
         </Text>
 
         <View style={{ gap: 20 }}>
-          <View style={{ gap: 8 }}>
-            <Text style={typography.subheadMedium}>Name</Text>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="Your name"
-              placeholderTextColor={colors.icon}
-              style={styles.input}
-              autoCapitalize="words"
-              autoCorrect={false}
-              returnKeyType="next"
-            />
-          </View>
-
           <View style={{ gap: 8 }}>
             <Text style={typography.subheadMedium}>Email</Text>
             <TextInput

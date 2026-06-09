@@ -94,8 +94,25 @@ export default function Subscribe() {
 
     setSubscribing(true);
     try {
-      // Get API key
-      const apiKey = await getApiKey();
+      // Get API key — if missing, try to re-fetch from backend using customerId
+      let apiKey = await getApiKey();
+      if (!apiKey && customerId) {
+        try {
+          const { saveApiKey } = await import("../../lib/storage");
+          const refreshRes = await fetch(`${getApiBase()}/api/customers`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: `${customerId}@analogphone.co`, name: "User" }),
+          });
+          const refreshData = await refreshRes.json();
+          if (refreshData.ok && refreshData.customer?.apiKey) {
+            apiKey = refreshData.customer.apiKey as string;
+            await saveApiKey(apiKey);
+          }
+        } catch (refreshErr) {
+          console.error("Failed to refresh API key:", refreshErr);
+        }
+      }
       if (!apiKey) {
         throw new Error("Not authenticated. Please restart the app.");
       }
@@ -167,7 +184,6 @@ export default function Subscribe() {
         customerEphemeralKeySecret: sheetData.ephemeralKey,
         paymentIntentClientSecret: sheetData.paymentIntent,
         defaultBillingDetails: { name: "" },
-        applePay: { merchantCountryCode: "US" },
       });
 
       if (initError) {

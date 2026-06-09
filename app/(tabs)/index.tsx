@@ -36,7 +36,6 @@ export default function HomeScreen() {
   
   const [backendStatus, setBackendStatus] = useState<"loading" | "connected" | "error">("loading");
   const [customerId, setCustomerId] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string | null>(null);
   const [device, setDevice] = useState<DeviceInfo | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [hasStaleCreds, setHasStaleCreds] = useState(false);
@@ -73,7 +72,6 @@ export default function HomeScreen() {
       console.log("[Home] getCredentials returned:", JSON.stringify(creds));
       if (creds?.customerId) {
         setCustomerId(creds.customerId);
-        setUserName(creds.userName || null);
         const url = `${getApiBase()}/api/devices/${encodeURIComponent(creds.customerId)}`;
         console.log("[Home] Fetching device from:", url);
         
@@ -125,6 +123,9 @@ export default function HomeScreen() {
 
           // Load usage stats for warnings
           loadUsageData(creds.customerId);
+        } else if (res.status === 429) {
+          // Rate limited — don't clear device or mark creds as stale
+          console.log("[Home] Device fetch rate limited, keeping existing state");
         } else {
           console.log("[Home] Device fetch failed:", res.status);
           setDevice(null);
@@ -134,7 +135,6 @@ export default function HomeScreen() {
       } else {
         console.log("[Home] No credentials found");
         setCustomerId(null);
-        setUserName(null);
         setDevice(null);
         setHasStaleCreds(false);
       }
@@ -182,7 +182,6 @@ export default function HomeScreen() {
   const handleStartFresh = async () => {
     await clearCredentials();
     setCustomerId(null);
-    setUserName(null);
     setDevice(null);
     setHasStaleCreds(false);
     router.push("/setup");
@@ -237,7 +236,7 @@ export default function HomeScreen() {
       await fetch(`${getApiBase()}/api/customers/${customerId}/dnd-schedule`, {
         method: "POST",
         headers,
-        body: JSON.stringify(updated),
+        body: JSON.stringify({ ...updated, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
       });
       setDndSchedule(updated);
     } catch (e) {
@@ -347,7 +346,7 @@ export default function HomeScreen() {
             })()}
           </Text>
           <Text style={[typography.callout, { color: colors.icon, marginBottom: 16 }]}>
-            {userName || "Your phone"}
+            Analog Phone
           </Text>
           <View style={[styles.row, { 
             gap: 8, 

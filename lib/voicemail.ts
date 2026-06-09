@@ -225,9 +225,19 @@ export async function setVoicemailGreetingAudio(
       body: JSON.stringify({ audioBase64, mime }),
     }
   );
-  const data = await response.json();
+  let data: any = null;
+  let text = "";
+  try {
+    data = await response.json();
+  } catch {
+    text = await response.text();
+  }
   if (!response.ok || !data.ok) {
-    throw new Error(data.error || "Failed to upload audio greeting");
+    throw new Error(
+      data?.error ||
+      text ||
+      `Failed to upload audio greeting (HTTP ${response.status})`
+    );
   }
   return data.greeting;
 }

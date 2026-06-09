@@ -2,7 +2,7 @@
 // the functions will throw a helpful error instructing the developer to
 // install the dependency (run `expo install expo-secure-store`).
 
-export async function saveCredentials(payload: { customerId: string; userName: string }) {
+export async function saveCredentials(payload: { customerId: string }) {
   try {
     const SecureStore = await import("expo-secure-store");
     await SecureStore.setItemAsync("phone_credentials", JSON.stringify(payload));

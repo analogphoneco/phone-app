@@ -51,15 +51,29 @@ export default function SetupHome() {
         if (deviceData.device?.phone_number) {
           // Device activated — check for an active subscription
           setStatus('Checking subscription...');
+
+          // First check device-level subscriptionStatus (fast, no extra API call)
+          if (deviceData.device?.subscriptionStatus === 'active') {
+            router.replace("/(tabs)");
+            return;
+          }
+
+          // Fall back to full subscription lookup
           try {
             const sub = await getActiveSubscription(creds.customerId);
             if (sub && sub.status === 'active') {
-              // Fully set up — go straight to the main app
               router.replace("/(tabs)");
               return;
             }
           } catch {
-            // Can't confirm sub — send to subscribe screen to be safe
+            // Subscription lookup failed — but if device is activated and
+            // subscriptionStatus isn't explicitly 'canceled', let them through.
+            // This covers household/multi-device scenarios where the second device
+            // doesn't have a direct subscription record but the account is paid.
+            if (deviceData.device?.subscriptionStatus !== 'canceled') {
+              router.replace("/(tabs)");
+              return;
+            }
           }
           router.replace("/setup/subscribe");
           return;
